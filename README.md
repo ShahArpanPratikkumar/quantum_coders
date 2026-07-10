@@ -564,12 +564,12 @@ Open a content-heavy page (Wikipedia, Medium, Dev.to, a GitHub README, a news si
 
 > ⚠️ Replace names, roles, and avatar images below with your actual team info before publishing.
 
-| Member | Role |
-|---|---|
-| Team Member 1 | Project Lead / Frontend |
-| Team Member 2 | Backend / AI Integration |
-| Team Member 3 | Chrome Extension / DOM Extraction |
-| Team Member 4 | Voice Assistant / Testing |
+| Member | Role | Name |
+|---|---|---|
+| Team Member 1 | Project Lead / Frontend | Munjal Raval |
+| Team Member 2 | Backend / AI Integration | Jay Patel |
+| Team Member 3 | Chrome Extension / DOM Extraction | Ansh Patel |
+| Team Member 4 | Voice Assistant / Testing | Arpan Shah |
 
 ---
 
