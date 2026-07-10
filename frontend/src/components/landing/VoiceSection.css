@@ -1,0 +1,95 @@
+.pp-voice {
+  background: var(--pp-dark-gradient);
+  position: relative;
+}
+
+.pp-voice__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .pp-voice__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pp-voice__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 500px;
+}
+
+.pp-voice__demo {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  box-shadow: var(--pp-card-shadow);
+}
+
+.pp-voice__demo-top {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pp-voice__waves {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 80px;
+  width: 100%;
+}
+
+.pp-voice__wave {
+  flex: 1;
+  background: var(--pp-gold-gradient);
+  border-radius: 4px;
+  height: 10%;
+  transition: height 0.3s ease;
+}
+
+.pp-voice__wave--active {
+  animation: pp-wave-bar 0.8s ease-in-out infinite alternate;
+}
+
+.pp-voice__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid var(--pp-border-light);
+}
+
+.pp-voice__btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--pp-border);
+  background: rgba(8, 8, 6, 0.5);
+  color: var(--pp-muted);
+  transition: all var(--t-fast);
+}
+
+.pp-voice__btn:hover {
+  border-color: var(--pp-gold);
+  color: var(--pp-gold);
+  background: var(--pp-gold-softer);
+}
+
+.pp-voice__btn--primary {
+  background: var(--pp-gold-gradient);
+  color: var(--pp-deep-black);
+  border: none;
+}
+.pp-voice__btn--primary:hover {
+  background: var(--pp-gold-light);
+  color: var(--pp-black);
+  box-shadow: var(--pp-gold-glow-sm);
+}

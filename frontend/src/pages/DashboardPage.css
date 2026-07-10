@@ -1,0 +1,113 @@
+.pp-dash-page {
+  padding: 40px 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pp-dash-page__header {
+  margin-bottom: 48px;
+}
+
+.pp-dash-page__title {
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.pp-dash-page__subtitle {
+  color: var(--quantum-text-muted);
+  font-size: 1.1rem;
+}
+
+.pp-dash-page__grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(140px, auto);
+  gap: 20px;
+}
+
+.pp-dash-card {
+  position: relative;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  transition: box-shadow var(--t-normal) var(--ease-luxury), border-color var(--t-fast);
+}
+
+.pp-dash-card:hover {
+  box-shadow: var(--quantum-gold-glow);
+}
+
+.pp-dash-card__border-reveal {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--quantum-gold-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-normal) var(--ease-luxury);
+}
+
+.pp-dash-card:hover .pp-dash-card__border-reveal {
+  transform: scaleX(1);
+}
+
+.pp-dash-card--large { grid-column: span 6; grid-row: span 2; min-height: 300px; }
+.pp-dash-card--medium { grid-column: span 3; grid-row: span 2; min-height: 300px; }
+.pp-dash-card--small { grid-column: span 4; }
+
+@media (max-width: 1200px) {
+  .pp-dash-card--large { grid-column: span 8; }
+  .pp-dash-card--medium { grid-column: span 4; }
+  .pp-dash-card--small { grid-column: span 6; }
+}
+
+@media (max-width: 768px) {
+  .pp-dash-page { padding: 24px 20px; }
+  .pp-dash-page__grid { display: flex; flex-direction: column; }
+  .pp-dash-card { min-height: 160px; }
+}
+
+.pp-dash-card__top {
+  position: absolute;
+  top: 20px; right: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pp-dash-card__num {
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  position: absolute;
+  top: -12px; right: 30px;
+  pointer-events: none;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(203, 162, 58, 0.15);
+}
+
+.pp-dash-card__icon {
+  color: var(--quantum-gold);
+  opacity: 0.8;
+  position: relative;
+  z-index: 1;
+}
+
+.pp-dash-card__content {
+  position: relative;
+  z-index: 2;
+}
+
+.pp-dash-card__content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+}
+
+.pp-dash-card__content p {
+  font-style: normal;
+  color: var(--quantum-text-muted);
+}

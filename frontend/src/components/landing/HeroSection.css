@@ -1,0 +1,215 @@
+.pp-hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 100px;
+  padding-bottom: 60px;
+  position: relative;
+  overflow: hidden;
+  background: var(--pp-dark-gradient);
+}
+
+/* Ambient glow */
+.pp-hero__glow {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba(203, 162, 58, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  animation: pp-glow-drift 12s ease-in-out infinite;
+}
+
+/* Oversized bg word */
+.pp-hero__bg-word {
+  position: absolute;
+  bottom: -2%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: clamp(8rem, 20vw, 20rem);
+  font-weight: 400;
+  letter-spacing: -0.08em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(203, 162, 58, 0.06);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Content */
+.pp-hero__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 800px;
+  padding-top: var(--space-5);
+}
+
+/* Label row */
+.pp-hero__label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pp-hero__label-line {
+  display: block;
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: var(--pp-gold-gradient);
+  opacity: 0.6;
+}
+
+/* Heading */
+.pp-hero__heading {
+  line-height: 0.92;
+}
+
+.pp-hero__italic {
+  font-style: italic;
+  font-family: var(--font-editorial);
+  font-size: clamp(3rem, 8vw, 7.5rem);
+  color: var(--pp-ivory);
+  -webkit-text-fill-color: var(--pp-ivory);
+}
+
+/* Description */
+.pp-hero__description {
+  max-width: 560px;
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+}
+
+/* CTAs */
+.pp-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Tagline */
+.pp-hero__tagline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pp-hero__tagline-sep {
+  color: var(--pp-border);
+  font-size: 1rem;
+}
+
+/* Browser preview card */
+.pp-hero__preview {
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 340px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: var(--pp-soft-shadow);
+}
+
+@media (max-width: 1100px) {
+  .pp-hero__preview { display: none; }
+}
+
+.pp-hero__preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--pp-border-light);
+  background: rgba(15, 13, 10, 0.8);
+}
+
+.pp-hero__preview-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--pp-muted-dark);
+}
+.pp-hero__preview-dot:first-child { background: var(--pp-error); }
+.pp-hero__preview-dot:nth-child(2) { background: var(--pp-warning); }
+.pp-hero__preview-dot:nth-child(3) { background: var(--pp-success); }
+
+.pp-hero__preview-url {
+  margin-left: 6px;
+  font-size: 0.65rem;
+  color: var(--pp-muted-dark);
+}
+
+.pp-hero__preview-body {
+  display: flex;
+  gap: 0;
+  padding: 14px;
+  gap: 12px;
+}
+
+.pp-hero__preview-article {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pp-hero__preview-line {
+  height: 10px;
+  border-radius: 3px;
+}
+
+.pp-hero__preview-highlight {
+  padding: 6px 8px;
+  background: var(--pp-gold-softer);
+  border-left: 2px solid var(--pp-gold);
+  border-radius: 2px;
+  margin: 2px 0;
+}
+
+.pp-hero__preview-panel {
+  width: 130px;
+  background: rgba(13, 12, 9, 0.9);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pp-hero__preview-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pp-hero__preview-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Scroll indicator */
+.pp-hero__scroll {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .pp-hero { padding-top: 80px; }
+  .pp-hero__content { gap: var(--space-5); }
+}

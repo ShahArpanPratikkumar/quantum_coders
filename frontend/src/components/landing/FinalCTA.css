@@ -1,0 +1,35 @@
+.pp-cta {
+  text-align: center;
+  background: var(--pp-dark-gradient);
+  position: relative;
+}
+
+.pp-cta__glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px; height: 300px;
+  background: radial-gradient(ellipse at center, rgba(203, 162, 58, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+  animation: pp-glow-drift 10s ease-in-out infinite;
+}
+
+.pp-cta__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  position: relative;
+  z-index: 1;
+}
+
+.pp-cta__heading {
+  max-width: 800px;
+}
+
+.pp-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
