@@ -1,0 +1,6 @@
+About Quantum AI
+Quantum AI is an AI-powered Chrome Extension that transforms the way users interact with web content.
+
+Instead of copying text into ChatGPT or another AI chatbot, Quantum AI understands the webpage directly inside the browser and lets users communicate using natural language — text or voice.
+
+Whether you're reading documentation, research papers, blogs, news articles, Wikipedia pages, or GitHub repositories, Quantum AI acts as your personal AI assistant by explaining, summarizing, reading aloud, and answering questions based only on the current webpage.
