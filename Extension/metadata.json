@@ -1,0 +1,6 @@
+{
+  "name": "Quantum AI",
+  "description": "Chrome Extension (Manifest V3) powered by local Ollama and Gemini for extracting, summarizing, and chatting with active web articles.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
