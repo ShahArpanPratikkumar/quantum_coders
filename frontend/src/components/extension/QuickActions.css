@@ -1,0 +1,43 @@
+.pp-qa {
+  padding: 16px 16px 0;
+  flex-shrink: 0;
+}
+
+.pp-qa__label {
+  margin-bottom: 10px;
+}
+
+.pp-qa__pills {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.pp-qa__pill {
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--pp-border);
+  background: rgba(203, 162, 58, 0.04);
+  color: var(--pp-muted);
+  font-family: var(--font-interface);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--t-fast) var(--ease-luxury);
+}
+
+.pp-qa__pill:hover:not(:disabled) {
+  color: var(--pp-gold);
+  border-color: var(--pp-border-hover);
+  background: var(--pp-gold-softer);
+}
+
+.pp-qa__pill:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.pp-qa__pill:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

@@ -1,0 +1,27 @@
+.pp-status-dot-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pp-status-dot--gold    { background: var(--pp-gold); }
+.pp-status-dot--coral   { background: #c46c61; }
+.pp-status-dot--success { background: var(--pp-success); }
+.pp-status-dot--muted   { background: var(--pp-muted-dark); }
+.pp-status-dot--error   { background: var(--pp-error); }
+
+.pp-status-dot--pulse {
+  animation: pp-pulse 1.8s ease-in-out infinite;
+}
+
+.pp-status-dot-label {
+  font-size: 0.75rem;
+  color: var(--pp-muted);
+}

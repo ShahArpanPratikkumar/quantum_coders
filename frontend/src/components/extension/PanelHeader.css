@@ -1,0 +1,42 @@
+.pp-ph {
+  flex-shrink: 0;
+  padding: 16px 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.pp-ph__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pp-ph__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pp-ph__btn {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pp-muted);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.pp-ph__btn:hover {
+  color: var(--pp-gold);
+  background: var(--pp-gold-softer);
+}
+
+.pp-ph__line {
+  position: absolute;
+  bottom: -12px; left: 18px; right: 18px;
+  height: 1px;
+  background: var(--pp-border);
+}

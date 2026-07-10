@@ -1,0 +1,17 @@
+.aurora-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.aurora-ring canvas {
+  display: block;
+  border-radius: 50%;
+}
+
+/* Size variants */
+.aurora-ring--sm canvas { width: 64px;  height: 64px; }
+.aurora-ring--md canvas { width: 100px; height: 100px; }
+.aurora-ring--lg canvas { width: 140px; height: 140px; }

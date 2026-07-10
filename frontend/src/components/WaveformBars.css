@@ -1,0 +1,28 @@
+.waveform-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 28px;
+}
+
+.waveform-bar {
+  width: 3px;
+  border-radius: 2px;
+  transform-origin: bottom center;
+  animation: waveBarPulse 0.5s ease-in-out infinite alternate;
+  animation-delay: var(--bar-delay, 0s);
+  height: calc(var(--bar-height, 0.2) * 100%);
+  min-height: 3px;
+  transition: height 0.1s ease-out, background-color 0.25s ease;
+}
+
+@keyframes waveBarPulse {
+  from { transform: scaleY(0.8); opacity: 0.7; }
+  to   { transform: scaleY(1.2); opacity: 1.0; }
+}
+
+/* Color variants */
+.waveform-bars--cyan  .waveform-bar { background: var(--cyan);   box-shadow: 0 0 4px rgba(34, 211, 238, 0.4); }
+.waveform-bars--coral .waveform-bar { background: var(--coral);  box-shadow: 0 0 4px rgba(251, 113, 133, 0.4); }
+.waveform-bars--violet .waveform-bar { background: var(--violet); box-shadow: 0 0 4px rgba(167, 139, 250, 0.4); }

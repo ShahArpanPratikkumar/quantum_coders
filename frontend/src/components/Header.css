@@ -1,0 +1,80 @@
+.lumen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.lumen-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lumen-header__favicon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lumen-header__wordmark {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lumen-header__logo-text {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.lumen-header__page-title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-dim);
+  line-height: 1.2;
+  max-width: 200px;
+  display: block;
+}
+
+.lumen-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.lumen-header__icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-dim);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.lumen-header__icon-btn:hover {
+  color: var(--ink);
+  background: var(--glass-fill-2);
+}
+
+.lumen-header__icon-btn--close:hover {
+  color: var(--coral);
+  background: rgba(251, 113, 133, 0.10);
+}

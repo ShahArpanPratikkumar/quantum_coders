@@ -1,0 +1,105 @@
+.pp-fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--z-fab);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .pp-fab-container {
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+.pp-fab-tooltip {
+  background: var(--pp-glass);
+  border: 1px solid var(--pp-border);
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  color: var(--pp-ivory);
+  box-shadow: var(--pp-soft-shadow);
+  pointer-events: none;
+}
+
+.pp-fab {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pp-black);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.pp-fab__inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pp-fab__ring {
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: var(--pp-gold-gradient);
+  z-index: 1;
+  mask: radial-gradient(closest-side, transparent 90%, black 91%);
+  -webkit-mask: radial-gradient(closest-side, transparent 90%, black 91%);
+  transition: all var(--t-normal);
+}
+
+.pp-fab:hover .pp-fab__ring {
+  inset: -3px;
+  opacity: 0.8;
+}
+
+.pp-fab__ring-2 {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid var(--pp-gold);
+  opacity: 0;
+  z-index: 0;
+  transition: opacity var(--t-normal);
+}
+
+/* Listening animation */
+.pp-fab__ring--listening {
+  animation: pp-ring-expand 1.5s ease-out infinite;
+}
+
+/* Speaking animation */
+.pp-fab__ring-2--speaking {
+  opacity: 0.4;
+  animation: pp-pulse 1.2s ease-in-out infinite;
+}
+
+/* Status dot for thinking/extracting */
+.pp-fab__status-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--pp-gold);
+  z-index: 3;
+  box-shadow: 0 0 8px var(--pp-gold), 0 0 0 2px var(--pp-black);
+  animation: pp-pulse 1s infinite;
+}
+
+/* Open state */
+.pp-fab--open {
+  background: var(--pp-surface-2);
+}
+.pp-fab--open .pp-fab__ring {
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+}

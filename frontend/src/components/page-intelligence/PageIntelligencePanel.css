@@ -1,0 +1,90 @@
+.pp-page-intelligence {
+  width: 340px;
+  min-width: 340px;
+  height: 100%;
+  background: var(--quantum-charcoal);
+  border-left: 1px solid var(--quantum-border);
+  display: flex;
+  flex-direction: column;
+  transition: width var(--t-normal) var(--ease-luxury), min-width var(--t-normal) var(--ease-luxury);
+  position: relative;
+  z-index: 20;
+}
+
+.pp-page-intelligence.collapsed {
+  width: 48px;
+  min-width: 48px;
+  cursor: pointer;
+}
+
+.pp-page-intelligence.collapsed:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pp-pi-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--quantum-border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.pp-pi-content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.pp-pi-content::-webkit-scrollbar {
+  width: 4px;
+}
+.pp-pi-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pp-pi-content::-webkit-scrollbar-thumb {
+  background: var(--quantum-border);
+  border-radius: 4px;
+}
+.pp-pi-content::-webkit-scrollbar-thumb:hover {
+  background: var(--quantum-gold-muted);
+}
+
+.pp-collapsed-intelligence {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pp-pulse {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.4; transform: scale(0.9); }
+}
+
+@media (max-width: 1024px) {
+  .pp-page-intelligence {
+    position: absolute;
+    right: 0;
+    top: 0;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+  }
+}
+
+@media (max-width: 768px) {
+  .pp-page-intelligence {
+    width: 100%;
+    min-width: 100%;
+  }
+}

@@ -1,0 +1,15 @@
+.pp-scroll-progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: transparent;
+  z-index: calc(var(--z-nav) + 1);
+  pointer-events: none;
+}
+
+.pp-scroll-progress__bar {
+  height: 100%;
+  background: var(--pp-gold-gradient);
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(203, 162, 58, 0.5);
+}

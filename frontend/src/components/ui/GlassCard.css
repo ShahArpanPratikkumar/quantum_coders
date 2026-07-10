@@ -1,0 +1,33 @@
+.pp-glass-card {
+  background: var(--pp-glass);
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--t-normal) var(--ease-luxury),
+              box-shadow var(--t-normal) var(--ease-luxury);
+}
+
+.pp-glass-card:hover {
+  box-shadow: var(--pp-gold-glow-sm);
+}
+
+/* Corner decorations */
+.pp-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40px; height: 1px;
+  background: var(--pp-gold-gradient);
+  opacity: 0.5;
+}
+.pp-glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 40px;
+  background: var(--pp-gold-gradient);
+  opacity: 0.5;
+}

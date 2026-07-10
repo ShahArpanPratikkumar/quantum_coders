@@ -1,0 +1,18 @@
+.pp-error-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+
+.pp-error-state__icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(196, 108, 97, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(196, 108, 97, 0.2);
+}

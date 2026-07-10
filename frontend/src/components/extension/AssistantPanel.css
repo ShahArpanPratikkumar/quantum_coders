@@ -1,0 +1,52 @@
+.pp-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: calc(var(--z-panel) - 1);
+}
+
+.pp-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  top: 24px;
+  width: 420px;
+  max-height: calc(100vh - 48px);
+  z-index: var(--z-panel);
+  display: flex;
+  flex-direction: column;
+  background: var(--pp-panel-gradient);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--pp-panel-shadow);
+  overflow: hidden;
+}
+
+@media (max-width: 520px) {
+  .pp-panel {
+    right: 10px; left: 10px; bottom: 10px; top: 10px;
+    width: auto;
+  }
+}
+
+/* Inner top glow */
+.pp-panel__inner-glow {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 1px;
+  background: var(--pp-gold-gradient);
+  opacity: 0.6;
+  border-radius: 0 0 50% 50%;
+  pointer-events: none;
+}
+
+.pp-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

@@ -1,0 +1,32 @@
+.pp-conv {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.pp-conv__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 16px 16px;
+}
+
+.pp-conv__thinking {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pp-conv__thinking-line {
+  width: 2px;
+  min-height: 40px;
+  background: linear-gradient(to bottom, var(--pp-gold), transparent);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.pp-conv__thinking-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

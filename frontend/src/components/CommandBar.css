@@ -1,0 +1,169 @@
+.cmd-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  background: rgba(11, 17, 32, 0.6);
+}
+
+/* Mic button */
+.cmd-bar__mic-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-fill);
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-normal);
+}
+
+.cmd-bar__mic-btn:hover:not(:disabled) {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.2);
+  transform: scale(1.05);
+}
+
+.cmd-bar__mic-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Text input */
+.cmd-bar__input {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--ink);
+  transition: border-color var(--transition-normal), background var(--transition-normal);
+}
+
+.cmd-bar__input::placeholder {
+  color: rgba(147, 160, 194, 0.5);
+}
+
+.cmd-bar__input:focus {
+  border-color: rgba(34, 211, 238, 0.5);
+  background: var(--glass-fill-2);
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.cmd-bar__input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Send button */
+.cmd-bar__send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-normal);
+  opacity: 1;
+}
+
+.cmd-bar__send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-glow-cyan);
+}
+
+.cmd-bar__send-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Listening state ── */
+.cmd-bar--listening {
+  background: rgba(251, 113, 133, 0.05);
+  border-top-color: rgba(251, 113, 133, 0.2);
+  min-height: 58px;
+}
+
+.cmd-bar__listening-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+}
+
+.cmd-bar__partial-text {
+  font-size: 13px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 18px;
+}
+
+.cmd-bar__partial-hint {
+  color: var(--coral);
+  font-style: italic;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ── Speaking state ── */
+.cmd-bar--speaking {
+  background: rgba(34, 211, 238, 0.04);
+  border-top-color: rgba(34, 211, 238, 0.2);
+  justify-content: center;
+  gap: 12px;
+}
+
+.cmd-bar__speaking-label {
+  font-size: 13px;
+  color: var(--cyan);
+  font-style: italic;
+}
+
+/* ── Stop button (shared) ── */
+.cmd-bar__stop-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  background: rgba(251, 113, 133, 0.10);
+  color: var(--coral);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.cmd-bar__stop-btn:hover {
+  background: rgba(251, 113, 133, 0.20);
+  box-shadow: 0 0 12px rgba(251, 113, 133, 0.2);
+}
+
+.cmd-bar__stop-btn--speaking {
+  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--cyan);
+}
+
+.cmd-bar__stop-btn--speaking:hover {
+  background: rgba(34, 211, 238, 0.16);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+}

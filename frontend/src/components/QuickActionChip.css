@@ -1,0 +1,49 @@
+.quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 12px;
+}
+
+.quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 100px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.quick-chip:hover:not(:disabled) {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-fill-2);
+  transform: translateY(-1px);
+}
+
+.quick-chip:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.quick-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.quick-chip__icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* Color accents */
+.quick-chip--cyan:hover:not(:disabled)   { color: var(--cyan);   border-color: rgba(34, 211, 238, 0.4);   background: rgba(34, 211, 238, 0.08); }
+.quick-chip--violet:hover:not(:disabled) { color: var(--violet); border-color: rgba(167, 139, 250, 0.4);  background: rgba(167, 139, 250, 0.08); }
+.quick-chip--coral:hover:not(:disabled)  { color: var(--coral);  border-color: rgba(251, 113, 133, 0.4);  background: rgba(251, 113, 133, 0.08); }
