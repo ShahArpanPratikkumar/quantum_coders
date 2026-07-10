@@ -600,7 +600,7 @@ a copy of this software...
 
 ## 🙏 Acknowledgements
 
-Google Gemini AI · React Team · Node.js Community · Mozilla Readability · Chrome Extensions Team · Open Source Community
+Google Gemini AI · React Team · Node.js Community · Mozilla Readability · Chrome Extensions Team · Open Source Community - Ollama - Gemma4
 
 ---
 
