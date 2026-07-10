@@ -1,12 +1,12 @@
 import { Clock, BookOpen, CheckCircle } from 'lucide-react';
-import { useQuantum } from '../../context/QuantumContext';
+import { usePageContext } from '../../context/PageContext';
 import './PageContextCard.css';
 
 export default function PageContextCard() {
-  const { currentPage, status } = useQuantum();
+  const { data: currentPage, aiState } = usePageContext();
   if (!currentPage) return null;
 
-  const isExtracting = status === 'extracting';
+  const isExtracting = aiState === 'extracting';
 
   return (
     <div className="pp-page-card" aria-label="Current page info">
@@ -16,15 +16,15 @@ export default function PageContextCard() {
       <div className="pp-page-card__main">
         {/* Favicon + domain */}
         <div className="pp-page-card__site">
-          <span className="pp-page-card__favicon" aria-hidden="true">{currentPage.favicon}</span>
+          <span className="pp-page-card__favicon" aria-hidden="true">{currentPage.favicon || '📄'}</span>
           <span className="pp-ui-text" style={{ color: 'var(--pp-muted)', fontSize: '0.72rem' }}>
-            {currentPage.domain}
+            {currentPage.domain || 'localhost'}
           </span>
         </div>
 
         {/* Title */}
-        <p className="pp-page-card__title truncate" title={currentPage.title}>
-          {currentPage.title}
+        <p className="pp-page-card__title truncate" title={currentPage.pageTitle || currentPage.title || 'Current Webpage'}>
+          {currentPage.pageTitle || currentPage.title || 'Current Webpage'}
         </p>
 
         {/* Stats */}
@@ -32,13 +32,13 @@ export default function PageContextCard() {
           <div className="pp-page-card__stat">
             <BookOpen size={11} color="var(--pp-muted)" strokeWidth={1.5} aria-hidden="true" />
             <span className="pp-ui-text" style={{ fontSize: '0.72rem' }}>
-              {currentPage.wordCount.toLocaleString()} words
+              {(currentPage.wordCount || 0).toLocaleString()} words
             </span>
           </div>
           <span className="pp-page-card__sep" aria-hidden="true">·</span>
           <div className="pp-page-card__stat">
             <Clock size={11} color="var(--pp-muted)" strokeWidth={1.5} aria-hidden="true" />
-            <span className="pp-ui-text" style={{ fontSize: '0.72rem' }}>{currentPage.readTime} read</span>
+            <span className="pp-ui-text" style={{ fontSize: '0.72rem' }}>{currentPage.readTime || '1 min'} read</span>
           </div>
           <span className="pp-page-card__sep" aria-hidden="true">·</span>
           <div className="pp-page-card__stat">

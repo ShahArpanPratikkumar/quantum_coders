@@ -14,9 +14,6 @@ const FEATURES = [
   { id: 'voice', name: 'Voice Conversation', desc: 'Hands-free audio mode.', icon: Mic, size: 'small', route: '/voice' },
   { id: 'code', name: 'Explain Code', desc: 'Analyze and simplify code blocks.', icon: Code2, size: 'small', route: '/code-lens' },
   { id: 'translate', name: 'Translate Page', desc: 'Read in your native language.', icon: Languages, size: 'small', route: '/translate' },
-  { id: 'focus', name: 'Focus Reading', desc: 'Distraction-free environment.', icon: Focus, size: 'small', route: '/focus' },
-  { id: 'extract', name: 'Extract Key Points', desc: 'Bulleted highlights and facts.', icon: List, size: 'small', route: '/research' },
-  { id: 'notes', name: 'Generate Study Notes', desc: 'Prepare for exams or reviews.', icon: BookOpen, size: 'small', route: '/saved' },
 ];
 
 export default function DashboardPage() {

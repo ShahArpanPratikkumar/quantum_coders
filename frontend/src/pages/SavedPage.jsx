@@ -6,12 +6,7 @@ import PageHeader from '../components/ui/PageHeader';
 import { useToast } from '../context/ToastContext';
 import GoldButton from '../components/ui/GoldButton';
 
-const MOCK_SAVED = [
-  { id: '1', type: 'Summary', title: 'React Router v6 Architecture', domain: 'medium.com', date: 'Just now', content: 'React Router v6 introduced <Routes> replacing <Switch>.' },
-  { id: '2', type: 'Chat', title: 'Context API vs Redux', domain: 'react.dev', date: '2 hours ago', content: 'Context API is best for UI state like themes and auth...' },
-  { id: '3', type: 'Research', title: 'Deep Analysis of Server Components', domain: 'nextjs.org', date: 'Yesterday', content: 'Server components allow rendering React on the server without shipping JS.' },
-  { id: '4', type: 'Text', title: 'Important quote', domain: 'github.com', date: 'Yesterday', content: '"Simplicity is the ultimate sophistication."' },
-];
+const MOCK_SAVED = [];
 
 const ICONS = {
   Summary: <FileText size={16} />,

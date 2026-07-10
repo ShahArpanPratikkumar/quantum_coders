@@ -4,7 +4,7 @@ import GoldButton from '../ui/GoldButton';
 import './EmptyState.css';
 
 export default function EmptyState() {
-  const { sendMessage } = useQuantum();
+  const { handleUserQuery } = useQuantum();
 
   const SUGGESTIONS = [
     'Summarize this page',
@@ -22,7 +22,7 @@ export default function EmptyState() {
       aria-label="Empty state — no conversation yet"
     >
       {/* Logo watermark */}
-      <div className="pp-empty__watermark pp-logo" aria-hidden="true">P</div>
+      <div className="pp-empty__watermark pp-logo" aria-hidden="true">Q</div>
 
       <div className="pp-empty__content">
         <h2 className="pp-empty__title pp-card-title" style={{ fontSize: '1.3rem' }}>
@@ -38,7 +38,7 @@ export default function EmptyState() {
           <motion.button
             key={i}
             className="pp-empty__suggestion"
-            onClick={() => sendMessage(s)}
+            onClick={() => handleUserQuery(s)}
             role="listitem"
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}

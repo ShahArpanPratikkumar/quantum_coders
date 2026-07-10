@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Mic, Trash2, Copy, Volume2, Square, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MessageSquare, Send, Mic, Trash2, Copy, Volume2, Square, Sparkles, Pause, Play, RotateCcw } from 'lucide-react';
 import PageTransition from '../components/ui/PageTransition';
 import PageHeader from '../components/ui/PageHeader';
 import { useToast } from '../context/ToastContext';
 import { useQuantum } from '../context/QuantumContext';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition.js';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis.js';
 
 const MOCK_SUGGESTIONS = [
   "Summarize this page",
@@ -14,54 +16,59 @@ const MOCK_SUGGESTIONS = [
   "List the important points"
 ];
 
-const MOCK_RESPONSES = [
-  "Based on this page, the main concept is that React Router v6 introduced a nested routing architecture which allows layouts to persist while child routes change. This drastically improves performance and UX.",
-  "That's a great question! The text suggests that using Context API is preferred for global UI state, whereas Redux or Zustand might be better for complex business logic.",
-  "Here is a simple explanation: Think of a React component like a custom HTML tag that you can build yourself, and it can remember things using 'state'.",
-  "The most important points are: \n1. Always use semantic HTML.\n2. Keep your components small and focused.\n3. Use CSS variables for theming."
-];
-
 export default function AskPage() {
-  const { currentPage } = useQuantum();
+  const { currentPage, messages, isTyping, error, handleUserQuery, stopGeneration, clearChat } = useQuantum();
   const { addToast } = useToast();
   const location = useLocation();
   
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('quantum-chat-history');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
+  const {
+    isListening, voiceStatus, transcript, interimTranscript,
+    startListening, stopListening, consumeTranscript, error: micError
+  } = useSpeechRecognition();
+  const { speak, stop: stopSpeaking, pause: pauseSpeaking, resume: resumeSpeaking, replay, isSpeaking, isPaused } = useSpeechSynthesis();
+
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem('quantum-chat-history', JSON.stringify(messages));
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
     if (location.state?.prefilledQuestion) {
       setInputValue(location.state.prefilledQuestion);
-      // optionally replace history state to prevent re-filling on refresh, but for now simple pre-fill is fine.
     }
   }, [location.state]);
 
+  // When transcript arrives (from stopListening), fill input and auto-send
+  useEffect(() => {
+    if (transcript && !isListening) {
+      const text = consumeTranscript();
+      if (text) {
+        setInputValue(text);
+        // Small tick so textarea renders the text before sending
+        requestAnimationFrame(() => {
+          handleUserQuery(text);
+          setInputValue('');
+        });
+      }
+    }
+  }, [transcript, isListening]); // eslint-disable-line
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      // Cancel any ongoing speech before listening
+      stopSpeaking();
+      startListening();
+    }
+  };
+
   const handleSend = (text = inputValue) => {
     if (!text.trim() || isTyping) return;
-
-    const newUserMsg = { id: Date.now(), role: 'user', content: text };
-    setMessages(prev => [...prev, newUserMsg]);
+    handleUserQuery(text);
     setInputValue('');
-    setIsTyping(true);
-
-    // Mock AI thinking
-    setTimeout(() => {
-      const mockResponse = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
-      const newAiMsg = { id: Date.now() + 1, role: 'assistant', content: mockResponse };
-      setMessages(prev => [...prev, newAiMsg]);
-      setIsTyping(false);
-    }, 1500);
   };
 
   const handleKeyDown = (e) => {
@@ -72,8 +79,7 @@ export default function AskPage() {
   };
 
   const handleClear = () => {
-    setMessages([]);
-    localStorage.removeItem('quantum-chat-history');
+    clearChat();
     addToast({ title: 'Chat cleared', type: 'info' });
   };
 
@@ -120,7 +126,7 @@ export default function AskPage() {
               What would you like to know?
             </p>
             <p style={{ fontSize: '0.9rem' }}>
-              I'm analyzing "{currentPage?.title}". You can ask me to summarize it, explain concepts, or find specific information.
+              I'm analyzing "{currentPage?.title || 'the current page'}". You can ask me to summarize it, explain concepts, or find specific information.
             </p>
             
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginTop: '24px' }}>
@@ -158,9 +164,9 @@ export default function AskPage() {
               >
                 <div style={{
                   maxWidth: '80%',
-                  background: msg.role === 'user' ? 'var(--quantum-gold-muted)' : 'var(--quantum-glass)',
-                  border: msg.role === 'user' ? '1px solid var(--quantum-gold)' : '1px solid var(--quantum-border)',
-                  color: msg.role === 'user' ? 'var(--quantum-gold)' : 'var(--quantum-ivory)',
+                  background: msg.role === 'user' ? 'var(--quantum-gold-muted)' : (msg.status === 'error' ? 'rgba(255,100,100,0.1)' : 'var(--quantum-glass)'),
+                  border: msg.role === 'user' ? '1px solid var(--quantum-gold)' : (msg.status === 'error' ? '1px solid red' : '1px solid var(--quantum-border)'),
+                  color: msg.role === 'user' ? 'var(--quantum-gold)' : (msg.status === 'error' ? 'red' : 'var(--quantum-ivory)'),
                   padding: '16px 20px',
                   borderRadius: '16px',
                   borderBottomRightRadius: msg.role === 'user' ? '4px' : '16px',
@@ -169,40 +175,50 @@ export default function AskPage() {
                   position: 'relative',
                   group: 'true'
                 }}>
-                  {msg.content}
+                  {msg.status === 'sending' ? (
+                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                       <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ width: '6px', height: '6px', background: 'var(--quantum-gold)', borderRadius: '50%' }} />
+                       <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} style={{ width: '6px', height: '6px', background: 'var(--quantum-gold)', borderRadius: '50%' }} />
+                       <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} style={{ width: '6px', height: '6px', background: 'var(--quantum-gold)', borderRadius: '50%' }} />
+                     </div>
+                  ) : msg.content}
                   
-                  {msg.role === 'assistant' && (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--quantum-border)' }}>
+                  {msg.role === 'assistant' && msg.status === 'complete' && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--quantum-border)', alignItems: 'center' }}>
                       <button onClick={() => handleCopy(msg.content)} style={actionBtnStyle} title="Copy">
                         <Copy size={14} />
                       </button>
-                      <button style={actionBtnStyle} title="Read Aloud">
+                      {/* Read aloud */}
+                      <button onClick={() => speak(msg.content)} style={actionBtnStyle} title="Read Aloud" disabled={isSpeaking}>
                         <Volume2 size={14} />
                       </button>
+                      {/* Pause / Resume */}
+                      {isSpeaking && (
+                        <button onClick={isPaused ? resumeSpeaking : pauseSpeaking} style={actionBtnStyle} title={isPaused ? 'Resume' : 'Pause'}>
+                          {isPaused ? <Play size={14} /> : <Pause size={14} />}
+                        </button>
+                      )}
+                      {/* Stop */}
+                      {isSpeaking && (
+                        <button onClick={stopSpeaking} style={actionBtnStyle} title="Stop">
+                          <Square size={14} fill="currentColor" />
+                        </button>
+                      )}
+                      {/* Replay */}
+                      <button onClick={replay} style={actionBtnStyle} title="Replay">
+                        <RotateCcw size={14} />
+                      </button>
+                      {msg.fallbackLabel && (
+                        <div style={{ marginLeft: 'auto', background: 'var(--quantum-gold)', color: 'var(--quantum-black-deep)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 600 }}>
+                          {msg.fallbackLabel}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
             ))}
             
-            {isTyping && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{
-                  background: 'var(--quantum-glass)',
-                  border: '1px solid var(--quantum-border)',
-                  padding: '16px 20px',
-                  borderRadius: '16px',
-                  borderBottomLeftRadius: '4px',
-                  display: 'flex',
-                  gap: '6px',
-                  alignItems: 'center'
-                }}>
-                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ width: '6px', height: '6px', background: 'var(--quantum-gold)', borderRadius: '50%' }} />
-                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} style={{ width: '6px', height: '6px', background: 'var(--quantum-gold)', borderRadius: '50%' }} />
-                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} style={{ width: '6px', height: '6px', background: 'var(--quantum-gold)', borderRadius: '50%' }} />
-                </div>
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </>
         )}
@@ -243,7 +259,7 @@ export default function AskPage() {
           <div style={{ display: 'flex', gap: '8px', paddingBottom: '4px' }}>
             {isTyping ? (
               <button 
-                onClick={() => setIsTyping(false)}
+                onClick={stopGeneration}
                 style={{
                   width: '40px', height: '40px', borderRadius: '50%',
                   background: 'var(--quantum-error)', color: 'white',
@@ -254,12 +270,20 @@ export default function AskPage() {
               </button>
             ) : (
               <>
-                <button style={{
+                <button 
+                  onClick={handleMicClick}
+                  title={voiceStatus === 'unsupported' ? 'Speech not supported in this browser' : isListening ? 'Stop listening' : 'Start voice input'}
+                  disabled={voiceStatus === 'unsupported' || voiceStatus === 'requesting-permission'}
+                  style={{
                   width: '40px', height: '40px', borderRadius: '50%',
-                  background: 'transparent', color: 'var(--quantum-text-muted)',
-                  border: '1px solid var(--quantum-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  background: isListening ? 'rgba(255,100,100,0.2)' : voiceStatus === 'requesting-permission' ? 'rgba(203,162,58,0.2)' : 'transparent', 
+                  color: isListening ? 'var(--quantum-error)' : voiceStatus === 'unsupported' ? 'var(--quantum-text-muted)' : 'var(--quantum-text-muted)',
+                  border: `1px solid ${isListening ? 'var(--quantum-error)' : 'var(--quantum-border)'}`, 
+                  cursor: voiceStatus === 'unsupported' ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: voiceStatus === 'unsupported' ? 0.4 : 1
                 }}>
-                  <Mic size={18} />
+                  {isListening ? <Square size={18} /> : <Mic size={18} />}
                 </button>
                 <button 
                   onClick={() => handleSend()}

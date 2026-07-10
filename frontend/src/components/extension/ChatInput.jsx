@@ -8,7 +8,7 @@ export default function ChatInput() {
   const [text, setText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef(null);
-  const { sendMessage, status, setStatus } = useQuantum();
+  const { status, setStatus, handleUserQuery } = useQuantum();
 
   const busy = ['thinking', 'extracting'].includes(status);
   const speaking = status === 'speaking';
@@ -25,7 +25,7 @@ export default function ChatInput() {
     const msg = text.trim();
     if (!msg || busy) return;
     setText('');
-    await sendMessage(msg);
+    await handleUserQuery(msg);
   };
 
   const handleKey = (e) => {
