@@ -1,53 +1,85 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ListTree, Search, ChevronDown, ChevronUp, Copy, Download, Bookmark } from 'lucide-react';
+import { ListTree, Search, ChevronDown, ChevronUp, Copy, Download, Bookmark, AlertCircle } from 'lucide-react';
 import PageTransition from '../components/ui/PageTransition';
 import PageHeader from '../components/ui/PageHeader';
 import GoldButton from '../components/ui/GoldButton';
 import { useToast } from '../context/ToastContext';
-
-const MOCK_RESEARCH_DATA = [
-  {
-    id: 'topic',
-    title: 'Main Topic & Summary',
-    content: 'The page discusses React Router v6, focusing on its architectural changes, specifically the move to `<Routes>`, nested layouts with `<Outlet>`, and new data fetching APIs like loaders and actions.'
-  },
-  {
-    id: 'claims',
-    title: 'Key Claims',
-    content: '1. React Router v6 is significantly faster than v5.\n2. Nested routing reduces unnecessary re-renders of layout components.\n3. Data loading at the route level prevents waterfall network requests.'
-  },
-  {
-    id: 'entities',
-    title: 'Mentioned Entities',
-    content: 'People: Michael Jackson (Creator), Ryan Florence (Creator)\nOrganizations: Remix, React Training\nTechnologies: React, React Router, JavaScript, Express'
-  },
-  {
-    id: 'bias',
-    title: 'Possible Bias',
-    content: 'The article is written from the perspective of the library creators or advocates, meaning it heavily emphasizes the positive benefits without detailing potential migration pain points.'
-  },
-  {
-    id: 'questions',
-    title: 'Questions Not Answered',
-    content: '1. How difficult is the migration from v5 to v6 for large enterprise apps?\n2. What are the fallback strategies if a route loader fails entirely?'
-  }
-];
+import { usePageContext } from '../context/PageContext';
 
 export default function ResearchPage() {
   const { addToast } = useToast();
+  const { pageContext, isDev, extractionStatus } = usePageContext();
   
   const [isAnalysed, setIsAnalysed] = useState(false);
   const [isAnalysing, setIsAnalysing] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({ topic: true, claims: true });
+  const [expandedSections, setExpandedSections] = useState({});
+  const [researchData, setResearchData] = useState([]);
+  const [error, setError] = useState(null);
+  const [fallbackLabel, setFallbackLabel] = useState(null);
 
-  const handleAnalyse = () => {
+  const parseResearchReport = (text) => {
+    // Expected format: ## Section Title\nContent
+    const lines = text.split('\n');
+    const sections = [];
+    let currentSection = null;
+
+    for (const line of lines) {
+      if (line.trim().startsWith('##')) {
+        if (currentSection) sections.push(currentSection);
+        currentSection = {
+          id: 'sec-' + Math.random().toString(36).substr(2, 9),
+          title: line.replace('##', '').trim(),
+          content: ''
+        };
+      } else if (currentSection) {
+        currentSection.content += line + '\n';
+      }
+    }
+    if (currentSection) sections.push(currentSection);
+    
+    // Trim content
+    sections.forEach(s => { s.content = s.content.trim(); });
+    
+    return sections;
+  };
+
+  const handleAnalyse = async () => {
+    if (!pageContext.content || pageContext.content.length < 100) {
+      setError("No readable page content available to analyze. Please navigate to a text-heavy page.");
+      return;
+    }
+
     setIsAnalysing(true);
-    setTimeout(() => {
-      setIsAnalysing(false);
+    setError(null);
+    setFallbackLabel(null);
+
+    try {
+      const { researchPageAPI } = await import('../services/quantumApi.js');
+      const response = await researchPageAPI({ pageContext });
+      
+      const parsed = parseResearchReport(response.research);
+      if (parsed.length === 0) {
+        throw new Error("Failed to parse research report. The AI returned an unexpected format.");
+      }
+      
+      setResearchData(parsed);
+      
+      // Expand first two sections by default
+      const initialExpand = {};
+      if (parsed[0]) initialExpand[parsed[0].id] = true;
+      if (parsed[1]) initialExpand[parsed[1].id] = true;
+      setExpandedSections(initialExpand);
+      
+      setFallbackLabel(response.fallbackLabel);
       setIsAnalysed(true);
       addToast({ title: 'Analysis Complete', type: 'success' });
-    }, 2500);
+    } catch (err) {
+      setError(err.message);
+      addToast({ title: 'Analysis failed', type: 'error' });
+    } finally {
+      setIsAnalysing(false);
+    }
   };
 
   const toggleSection = (id) => {
@@ -61,7 +93,7 @@ export default function ResearchPage() {
   };
 
   const copyAll = () => {
-    const fullText = MOCK_RESEARCH_DATA.map(s => `## ${s.title}\n${s.content}\n`).join('\n');
+    const fullText = researchData.map(s => `## ${s.title}\n${s.content}\n`).join('\n');
     navigator.clipboard.writeText(fullText);
     addToast({ title: 'Copied full report', type: 'success' });
   };
@@ -74,8 +106,27 @@ export default function ResearchPage() {
         icon={ListTree}
       />
 
-      <div style={{ maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      <div style={{ maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '64px' }}>
         
+        {isDev && (
+          <div style={{ background: 'rgba(203, 162, 58, 0.1)', border: '1px solid var(--quantum-gold)', color: 'var(--quantum-gold)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem' }}>
+            <strong>DEV PREVIEW:</strong> In standalone mode, Quantum does not have access to a real browser tab.
+          </div>
+        )}
+
+        {extractionStatus === 'protected' && (
+          <div style={{ background: 'rgba(255, 59, 48, 0.1)', border: '1px solid var(--quantum-error)', color: 'var(--quantum-error)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem' }}>
+            <strong>Protected Page:</strong> Chrome blocks extensions from reading this internal page.
+          </div>
+        )}
+
+        {error && (
+          <div style={{ color: 'var(--quantum-error)', background: 'rgba(255,59,48,0.1)', padding: '16px', borderRadius: '8px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <span style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>{error}</span>
+          </div>
+        )}
+
         {!isAnalysed ? (
           <div style={{
             background: 'var(--quantum-black-deep)',
@@ -92,15 +143,16 @@ export default function ResearchPage() {
             <p className="pp-editorial" style={{ color: 'var(--quantum-text-muted)', marginBottom: '32px', maxWidth: '400px' }}>
               Quantum will scan the page for key claims, entities, statistics, and potential biases to generate a structured research report.
             </p>
-            <GoldButton variant="primary" size="lg" onClick={handleAnalyse} disabled={isAnalysing}>
+            <GoldButton variant="primary" size="lg" onClick={handleAnalyse} disabled={isAnalysing || extractionStatus === 'protected'}>
               {isAnalysing ? 'Analyzing Page Content...' : 'Analyze Page'}
             </GoldButton>
           </div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--quantum-text-muted)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--quantum-text-muted)', display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <span style={{ color: 'var(--quantum-gold)' }}>AI-assisted interpretation</span> · Found on page
+                {fallbackLabel && <span style={{ background: 'var(--quantum-gold)', color: 'var(--quantum-black-deep)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>{fallbackLabel}</span>}
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <GoldButton variant="outline" onClick={copyAll}><Copy size={14} style={{ marginRight: '8px' }} /> Copy All</GoldButton>
@@ -110,7 +162,7 @@ export default function ResearchPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {MOCK_RESEARCH_DATA.map((section) => (
+              {researchData.map((section) => (
                 <div key={section.id} style={{
                   background: 'var(--quantum-glass)',
                   border: '1px solid var(--quantum-border)',

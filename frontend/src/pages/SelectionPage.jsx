@@ -4,50 +4,55 @@ import { Highlighter, BookOpen, Volume2, Copy, Eraser, Languages, RefreshCw, Zap
 import PageTransition from '../components/ui/PageTransition';
 import PageHeader from '../components/ui/PageHeader';
 import { useToast } from '../context/ToastContext';
+import { usePageContext } from '../context/PageContext';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis.js';
 
-const DEFAULT_SELECTION = "React Router v6 introduces a completely rewritten architecture. The primary change is the shift away from <Switch> in favor of <Routes>. Furthermore, it heavily promotes nested routing where parent layout components use an <Outlet /> to render child routes.";
-
-const MOCK_RESULTS = {
-  explain: "This text is explaining that in the newest version of React Router (v6), the way developers set up page navigation has changed significantly. They removed a component called `<Switch>` and replaced it with `<Routes>`. More importantly, they now encourage a 'nested' approach, which means you can have a main page layout (like a dashboard with a sidebar) that stays on the screen, while only the content inside (the `<Outlet />`) changes when you click a link.",
-  simplify: "The new React Router v6 changed how page links work. Instead of `<Switch>`, you use `<Routes>`. It also makes it easier to keep your menus and sidebars visible while only the main page content changes.",
-  summarize: "React Router v6 replaces Switch with Routes and focuses on nested routing via the Outlet component for persistent layouts.",
-  translate: {
-    hi: "React Router v6 ने पूरी तरह से नया आर्किटेक्चर पेश किया है। मुख्य बदलाव <Switch> को हटाकर <Routes> का उपयोग करना है। इसके अलावा, यह नेस्टेड राउटिंग को बढ़ावा देता है जहां पैरेंट लेआउट चाइल्ड राउट्स को रेंडर करने के लिए <Outlet /> का उपयोग करते हैं।",
-    gu: "React Router v6 સંપૂર્ણપણે નવું આર્કિટેક્ચર રજૂ કરે છે. મુખ્ય ફેરફાર <Switch> ને બદલે <Routes> નો ઉપયોગ કરવાનો છે. વધુમાં, તે નેસ્ટેડ રાઉટિંગને પ્રોત્સાહન આપે છે જ્યાં પેરેન્ટ લેઆઉટ ચાઇલ્ડ રાઉટ્સ રેન્ડર કરવા માટે <Outlet /> નો ઉપયોગ કરે છે."
-  }
-};
+const DEFAULT_SELECTION = "";
 
 export default function SelectionPage() {
   const { addToast } = useToast();
-  const synthRef = useRef(window.speechSynthesis);
+  const { content } = usePageContext();
+  const { speak } = useSpeechSynthesis();
   
   const [selection, setSelection] = useState(DEFAULT_SELECTION);
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
 
-  const handleAction = (actionKey) => {
+  const handleAction = async (actionKey) => {
     setActiveAction(actionKey);
     setIsLoading(true);
     setResult(null);
     
-    setTimeout(() => {
-      if (actionKey === 'translate_hi') {
-        setResult(MOCK_RESULTS.translate.hi);
-      } else if (actionKey === 'translate_gu') {
-        setResult(MOCK_RESULTS.translate.gu);
+    try {
+      const { explainTextAPI, translateTextAPI, summarizePageAPI } = await import('../services/quantumApi.js');
+      let responseText = "";
+      
+      if (actionKey === 'translate_hi' || actionKey === 'translate_gu') {
+        const lang = actionKey === 'translate_hi' ? 'Hindi' : 'Gujarati';
+        const res = await translateTextAPI({ text: selection, targetLanguage: lang });
+        responseText = res.translation;
+      } else if (actionKey === 'summarize') {
+        const res = await summarizePageAPI({ pageContext: { title: 'Selection', content: selection }, mode: 'quick' });
+        responseText = res.summary;
       } else {
-        setResult(MOCK_RESULTS[actionKey]);
+        const modeDesc = actionKey === 'simplify' ? 'Explain this in extremely simple terms for a beginner' : 'Explain this text in detail';
+        const res = await explainTextAPI({ text: selection, context: content || '' });
+        responseText = res.explanation;
       }
+      
+      setResult(responseText);
+    } catch (err) {
+      let errMsg = err.message;
+      if (errMsg === 'Failed to fetch' || errMsg.includes('fetch')) errMsg = 'Backend offline. Run npm run server';
+      setResult(`Error: ${errMsg}`);
+    } finally {
       setIsLoading(false);
-    }, 1200);
+    }
   };
 
   const readAloud = (text) => {
-    if (!synthRef.current) return;
-    synthRef.current.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    synthRef.current.speak(utterance);
+    speak(text);
   };
 
   const copyText = (text) => {
@@ -95,13 +100,42 @@ export default function SelectionPage() {
           </div>
           
           {selection ? (
-            <p className="pp-editorial" style={{ fontSize: '1.2rem', color: 'var(--quantum-ivory)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>
-              "{selection}"
-            </p>
+            <textarea
+              className="pp-editorial"
+              value={selection}
+              onChange={(e) => setSelection(e.target.value)}
+              style={{ 
+                width: '100%', 
+                minHeight: '120px', 
+                background: 'transparent', 
+                border: '1px solid var(--quantum-border-soft)',
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '1.1rem', 
+                color: 'var(--quantum-ivory)', 
+                lineHeight: 1.6, 
+                resize: 'vertical',
+                outline: 'none'
+              }}
+            />
           ) : (
-            <p style={{ color: 'var(--quantum-text-muted)', fontStyle: 'italic', margin: 0 }}>
-              No text selected. Highlight text on any page to see it here.
-            </p>
+            <textarea
+              placeholder="Paste or type text here..."
+              value={selection}
+              onChange={(e) => setSelection(e.target.value)}
+              style={{ 
+                width: '100%', 
+                minHeight: '120px', 
+                background: 'transparent', 
+                border: '1px dashed var(--quantum-border)',
+                borderRadius: '8px',
+                padding: '16px',
+                fontSize: '1rem', 
+                color: 'var(--quantum-text-muted)', 
+                resize: 'vertical',
+                outline: 'none'
+              }}
+            />
           )}
         </div>
 

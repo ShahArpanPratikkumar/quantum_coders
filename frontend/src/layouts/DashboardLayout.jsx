@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
-import PageIntelligencePanel from '../components/page-intelligence/PageIntelligencePanel';
 import './DashboardLayout.css';
 
 export default function DashboardLayout() {
@@ -13,9 +12,6 @@ export default function DashboardLayout() {
       <main className="pp-dashboard-main pp-scroll">
         <Outlet />
       </main>
-
-      {/* Right Page Intelligence Panel */}
-      <PageIntelligencePanel />
     </div>
   );
 }

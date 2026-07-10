@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Languages, ArrowRightLeft, Volume2, Copy, Trash2, RefreshCw } from 'lucide-react';
 import PageTransition from '../components/ui/PageTransition';
@@ -12,18 +12,12 @@ const LANGUAGES = [
   { code: 'gu', name: 'Gujarati' }
 ];
 
-const MOCK_TRANSLATIONS = {
-  'en-hi': "यह पृष्ठ रिएक्ट राउटर v6 के लिए प्रलेखन है। यह नेविगेशन और नेस्टेड लेआउट को कॉन्फ़िगर करने का तरीका बताता है।",
-  'en-gu': "આ પૃષ્ઠ રિએક્ટ રાઉટર v6 માટે દસ્તાવેજીકરણ છે. તે નેવિગેશન અને નેસ્ટેડ લેઆઉટને કેવી રીતે ગોઠવવું તે સમજાવે છે.",
-  'hi-en': "This page is the documentation for React Router v6. It explains how to configure navigation and nested layouts.",
-  'gu-en': "This page is the documentation for React Router v6. It explains how to configure navigation and nested layouts."
-};
+
 
 const DEFAULT_SOURCE = "This page is the documentation for React Router v6. It explains how to configure navigation and nested layouts.";
 
 export default function TranslatePage() {
   const { addToast } = useToast();
-  const synthRef = useRef(window.speechSynthesis);
 
   const [sourceLang, setSourceLang] = useState('en');
   const [targetLang, setTargetLang] = useState('hi');
@@ -31,31 +25,45 @@ export default function TranslatePage() {
   const [targetText, setTargetText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
 
+  const [fallbackLabel, setFallbackLabel] = useState(null);
+
   const handleSwap = () => {
     setSourceLang(targetLang);
     setTargetLang(sourceLang);
     setSourceText(targetText);
     setTargetText(sourceText);
+    setFallbackLabel(null);
   };
 
-  const handleTranslate = () => {
+  const handleTranslate = async () => {
     if (!sourceText.trim()) return;
     
     setIsTranslating(true);
-    setTimeout(() => {
-      const key = `${sourceLang}-${targetLang}`;
-      setTargetText(MOCK_TRANSLATIONS[key] || "Translation not available in mock data. Try English to Hindi.");
+    setFallbackLabel(null);
+    try {
+      const { translateTextAPI } = await import('../services/quantumApi.js');
+      const targetLangName = LANGUAGES.find(l => l.code === targetLang)?.name || targetLang;
+      const res = await translateTextAPI({ text: sourceText, targetLanguage: targetLangName });
+      setTargetText(res.translation);
+      if (res.usedFallback) {
+         setFallbackLabel('⚡ Free AI (Ollama offline)');
+      }
+    } catch (err) {
+      let errMsg = err.message;
+      if (errMsg === 'Failed to fetch' || errMsg.includes('fetch')) errMsg = 'Backend offline. Run npm run server';
+      setTargetText(`Error: ${errMsg}`);
+    } finally {
       setIsTranslating(false);
-    }, 1200);
+    }
   };
 
+  // Language-aware TTS (uses window.speechSynthesis directly for lang code support)
   const speak = (text, langCode) => {
-    if (!synthRef.current) return;
-    synthRef.current.cancel();
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    // Simple heuristic for demo
     utterance.lang = langCode === 'hi' ? 'hi-IN' : langCode === 'gu' ? 'gu-IN' : 'en-US';
-    synthRef.current.speak(utterance);
+    window.speechSynthesis.speak(utterance);
   };
 
   const copyToClipboard = (text) => {
@@ -138,7 +146,12 @@ export default function TranslatePage() {
                 Translation
               </span>
               {targetText && (
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {fallbackLabel && (
+                    <div style={{ background: 'var(--quantum-gold)', color: '#000', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                      {fallbackLabel}
+                    </div>
+                  )}
                   <button onClick={() => speak(targetText, targetLang)} style={miniBtn} title="Read Aloud"><Volume2 size={14} /></button>
                   <button onClick={() => copyToClipboard(targetText)} style={miniBtn} title="Copy"><Copy size={14} /></button>
                 </div>

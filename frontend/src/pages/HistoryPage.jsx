@@ -7,12 +7,7 @@ import PageHeader from '../components/ui/PageHeader';
 import { useToast } from '../context/ToastContext';
 import GoldButton from '../components/ui/GoldButton';
 
-const MOCK_HISTORY = [
-  { id: '1', title: 'React Router v6 Architecture', domain: 'reactrouter.com', date: 'Just now', feature: 'Smart Reader', progress: 45, path: '/reader' },
-  { id: '2', title: 'Understanding Context API', domain: 'react.dev', date: '2 hours ago', feature: 'Ask Quantum', progress: 100, path: '/ask' },
-  { id: '3', title: 'Server Components Deep Dive', domain: 'nextjs.org', date: 'Yesterday', feature: 'Research Mode', progress: 10, path: '/research' },
-  { id: '4', title: 'JavaScript Promises Explained', domain: 'mdn.org', date: 'Yesterday', feature: 'Code Lens', progress: 80, path: '/code-lens' },
-];
+const MOCK_HISTORY = [];
 
 export default function HistoryPage() {
   const { addToast } = useToast();

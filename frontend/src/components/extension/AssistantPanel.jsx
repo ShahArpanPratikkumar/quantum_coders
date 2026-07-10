@@ -10,7 +10,7 @@ import EmptyState from './EmptyState';
 import './AssistantPanel.css';
 
 export default function AssistantPanel() {
-  const { isPanelOpen, isSettingsOpen, messages, status } = useQuantum();
+  const { isPanelOpen, isSettingsOpen, status, messages } = useQuantum();
 
   return (
     <AnimatePresence>

@@ -1,107 +1,195 @@
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import { useActiveTab } from '../hooks/useActiveTab';
+/**
+ * PageContext — Real page content extraction
+ * NO hardcoded fallback data. NO React Router mock content.
+ * In extension mode: extracts real content from the active tab.
+ * In dev mode: shows a clearly labelled DEV PREVIEW state.
+ */
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { isExtensionEnvironment, getActiveTabInfo, extractPageContent, getSelectedText } from '../services/chromeService';
 
 const PageContext = createContext(null);
 
-const fallbackPageData = {
-  pageTitle: "React Router Documentation",
-  domain: "reactrouter.com",
-  favicon: "https://reactrouter.com/favicon-light.png",
-  pageType: "Documentation",
-  pageTypeConfidence: 92,
-  summary:
-    "This page explains route configuration, nested layouts, navigation, and state handling in React Router.",
-  topics: [
-    "React Router",
-    "Nested Routes",
-    "Navigation",
-    "Layout Routes",
-    "Route State"
-  ],
-  sections: [
-    "Introduction",
-    "Installation",
-    "Router Setup",
-    "Nested Routes",
-    "Navigation",
-    "Examples"
-  ],
-  importantItems: {
-    codeBlocks: 3,
-    steps: 5,
-    warnings: 2,
-    links: 8
-  },
-  suggestedQuestions: [
-    "How do nested routes work?",
-    "What is the recommended setup?",
-    "Explain navigation simply."
-  ]
+const INITIAL_STATE = {
+  // Tab info
+  tabId: null,
+  tabUrl: null,
+  title: '',
+  url: '',
+  domain: '',
+  favicon: '',
+  isProtected: false,
+
+  // Extracted content
+  content: '',
+  excerpt: '',
+  author: '',
+  wordCount: 0,
+  readingTime: 0,
+  pageType: '',
+  headings: [],
+  codeBlocks: [],
+  selectedText: '',
+
+  // Status
+  extractionStatus: 'idle', // idle | extracting | success | error | protected | no-content
+  extractionError: null,
+  isDemo: false,
+  isDev: !isExtensionEnvironment
 };
 
 export function PageProvider({ children }) {
-  const [data, setData] = useState(fallbackPageData);
-  const [isDemo, setIsDemo] = useState(true);
-  const tabInfo = useActiveTab();
-  
-  // App states
-  const [aiState, setAiState] = useState('ready'); // idle | extracting | ready | thinking | listening | speaking | error
-  const [aiStateMessage, setAiStateMessage] = useState('Page content successfully extracted');
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [state, setState] = useState(INITIAL_STATE);
+  const [aiState, setAiState] = useState('ready');
+  const [aiStateMessage, setAiStateMessage] = useState('');
+  const currentTabRef = useRef(null);
 
-  // Workspace selections
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
+  const extractContent = useCallback(async (tabId) => {
+    if (!tabId) return;
+    
+    setState(prev => ({ ...prev, extractionStatus: 'extracting' }));
 
-  // Load initial fallback
-  useEffect(() => {
-    // In a real app, this would detect the active Chrome tab.
-    // We already use tabInfo now.
-    setIsDemo(true);
+    const content = await extractPageContent(tabId);
+
+    if (!content) {
+      setState(prev => ({
+        ...prev,
+        extractionStatus: 'error',
+        extractionError: 'Could not extract page content. The page may be protected or not yet loaded.',
+        content: ''
+      }));
+      return;
+    }
+
+    if (!content.content || content.content.trim().length < 20) {
+      setState(prev => ({
+        ...prev,
+        extractionStatus: 'no-content',
+        extractionError: 'This page has no readable text content.',
+        content: ''
+      }));
+      return;
+    }
+
+    setState(prev => ({
+      ...prev,
+      content: content.content || '',
+      excerpt: content.excerpt || '',
+      author: content.author || '',
+      wordCount: content.wordCount || 0,
+      readingTime: content.readingTime || 0,
+      pageType: content.pageType || 'Page',
+      headings: content.headings || [],
+      codeBlocks: content.codeBlocks || [],
+      extractionStatus: 'success',
+      extractionError: null
+    }));
   }, []);
+
+  const loadTab = useCallback(async () => {
+    const tabInfo = await getActiveTabInfo();
+
+    // Dev mode — no real tab available
+    if (!tabInfo) {
+      setState(prev => ({
+        ...INITIAL_STATE,
+        isDev: true,
+        isDemo: true,
+        extractionStatus: 'idle',
+        aiStateMessage: '⚠️ Development Preview — not live page data'
+      }));
+      return;
+    }
+
+    // Tab changed — reset content
+    const isNewTab = currentTabRef.current?.id !== tabInfo.id || currentTabRef.current?.url !== tabInfo.url;
+    if (isNewTab) {
+      currentTabRef.current = { id: tabInfo.id, url: tabInfo.url };
+      
+      setState(prev => ({
+        ...INITIAL_STATE,
+        tabId: tabInfo.id,
+        tabUrl: tabInfo.url,
+        title: tabInfo.title,
+        url: tabInfo.url,
+        domain: tabInfo.domain,
+        favicon: tabInfo.favicon,
+        isProtected: tabInfo.isProtected,
+        isDev: false,
+        isDemo: false,
+        extractionStatus: tabInfo.isProtected ? 'protected' : 'extracting'
+      }));
+
+      if (!tabInfo.isProtected) {
+        await extractContent(tabInfo.id);
+      }
+    }
+  }, [extractContent]);
+
+  // Initial load
+  useEffect(() => {
+    loadTab();
+  }, [loadTab]);
+
+  // Listen for tab changes (extension only)
+  useEffect(() => {
+    if (!isExtensionEnvironment) return;
+    
+    const handleTabUpdate = (tabId, changeInfo, tab) => {
+      if (changeInfo.status === 'complete' && tab.active) {
+        loadTab();
+      }
+    };
+
+    const handleTabActivated = () => {
+      loadTab();
+    };
+
+    try {
+      chrome.tabs.onUpdated.addListener(handleTabUpdate);
+      chrome.tabs.onActivated.addListener(handleTabActivated);
+      return () => {
+        chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+        chrome.tabs.onActivated.removeListener(handleTabActivated);
+      };
+    } catch (e) {
+      // Ignore
+    }
+  }, [loadTab]);
 
   const refreshPageContext = useCallback(async () => {
     setAiState('extracting');
-    setAiStateMessage('Re-analysing page content...');
-    
-    // Simulate network delay for extraction
-    await new Promise(r => setTimeout(r, 1500));
-    
-    // In a real app we'd fetch new data here. We'll just reset the fallback for demo.
-    setData(fallbackPageData);
+    await loadTab();
     setAiState('ready');
-    setAiStateMessage('Context successfully updated');
-    setLastUpdated(new Date());
-    
-    return true; // Success indicator
-  }, []);
+  }, [loadTab]);
+
+  const updateSelectedText = useCallback(async () => {
+    if (!state.tabId) return;
+    const text = await getSelectedText(state.tabId);
+    if (text) {
+      setState(prev => ({ ...prev, selectedText: text }));
+    }
+  }, [state.tabId]);
 
   const value = {
-    // Page Data
-    ...data,
-    ...(tabInfo ? {
-      pageTitle: tabInfo.title,
-      domain: tabInfo.domain,
-      favicon: tabInfo.favicon,
-      url: tabInfo.url
-    } : {}),
-    isDemo,
-    
-    // Status
+    ...state,
     aiState,
     setAiState,
     aiStateMessage,
     setAiStateMessage,
-    lastUpdated,
-    
-    // Interactivity
-    selectedTopic,
-    setSelectedTopic,
-    selectedSection,
-    setSelectedSection,
-    
-    // Actions
-    refreshPageContext
+    refreshPageContext,
+    updateSelectedText,
+    // Convenience: the full context object to send to backend
+    pageContext: {
+      title: state.title,
+      url: state.url,
+      domain: state.domain,
+      content: state.content,
+      excerpt: state.excerpt,
+      wordCount: state.wordCount,
+      readingTime: state.readingTime,
+      pageType: state.pageType,
+      headings: state.headings
+    }
   };
 
   return (
@@ -113,6 +201,6 @@ export function PageProvider({ children }) {
 
 export function usePageContext() {
   const ctx = useContext(PageContext);
-  if (!ctx) throw new Error("usePageContext must be used within PageProvider");
+  if (!ctx) throw new Error('usePageContext must be used within PageProvider');
   return ctx;
 }

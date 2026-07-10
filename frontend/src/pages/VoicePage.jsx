@@ -1,112 +1,117 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, Settings2, Square } from 'lucide-react';
+import { Mic, MicOff, Volume2, Settings2, Square, AlertCircle, Pause, Play } from 'lucide-react';
 import PageTransition from '../components/ui/PageTransition';
 import PageHeader from '../components/ui/PageHeader';
 import WaveformBars from '../components/WaveformBars';
 import { useToast } from '../context/ToastContext';
+import { usePageContext } from '../context/PageContext';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 
 export default function VoicePage() {
   const { addToast } = useToast();
+  const { pageContext, isDev, extractionStatus } = usePageContext();
   
-  const [state, setState] = useState('idle'); // idle, listening, processing, speaking
-  const [transcript, setTranscript] = useState('');
+  const [pageState, setPageState] = useState('idle'); // idle | listening | processing | speaking | error
   const [assistantText, setAssistantText] = useState('');
   
-  const recognitionRef = useRef(null);
-  const synthRef = useRef(window.speechSynthesis);
+  const { speak, pause, resume, stop: stopTTS, isSpeaking, isPaused } = useSpeechSynthesis();
+
+  const {
+    isListening, voiceStatus, transcript, consumeTranscript,
+    startListening, stopListening, error: micError
+  } = useSpeechRecognition();
+
+  // Reflect mic errors as page state
+  useEffect(() => {
+    if (micError === 'unsupported') {
+      addToast({ title: 'Speech recognition not supported in this browser.', type: 'error' });
+      setPageState('error');
+    } else if (micError === 'permission-denied') {
+      addToast({ title: 'Microphone access denied. Please allow mic in browser settings.', type: 'error' });
+      setPageState('error');
+    } else if (micError === 'no-speech') {
+      addToast({ title: 'No speech detected. Try speaking louder.', type: 'warning' });
+      setPageState('idle');
+    } else if (micError) {
+      setPageState('idle');
+    }
+  }, [micError, addToast]);
+
+  // When transcript arrives after stopListening
+  useEffect(() => {
+    if (transcript && !isListening && pageState === 'listening') {
+      const text = consumeTranscript();
+      if (text) handleUserStopSpeaking(text);
+      else setPageState('idle');
+    }
+  }, [transcript, isListening, pageState]); // eslint-disable-line
+
+  // Sync isSpeaking → pageState
+  useEffect(() => {
+    if (isSpeaking) setPageState('speaking');
+    else if (pageState === 'speaking') setPageState('idle');
+  }, [isSpeaking]); // eslint-disable-line
 
   useEffect(() => {
-    // Initialize Speech Recognition if supported
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      
-      recognition.onstart = () => setState('listening');
-      
-      recognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-        
-        setTranscript(prev => finalTranscript ? prev + ' ' + finalTranscript : prev + interimTranscript);
-        
-        // Mock sending final result to AI
-        if (finalTranscript) {
-          handleUserStopSpeaking(finalTranscript);
-        }
-      };
-      
-      recognition.onerror = (event) => {
-        if (event.error !== 'aborted') {
-          console.error('Speech recognition error', event.error);
-          setState('idle');
-          addToast({ title: `Microphone error: ${event.error}`, type: 'error' });
-        }
-      };
-      
-      recognition.onend = () => {
-        if (state === 'listening') setState('idle');
-      };
-      
-      recognitionRef.current = recognition;
-    } else {
-      addToast({ title: 'Speech recognition not supported in this browser.', type: 'error' });
-    }
-
     return () => {
-      if (recognitionRef.current) recognitionRef.current.abort();
-      if (synthRef.current) synthRef.current.cancel();
+      stopListening();
+      stopTTS();
     };
-  }, [addToast, state]);
+  }, [stopListening, stopTTS]);
 
   const toggleListening = () => {
-    if (!recognitionRef.current) {
-      addToast({ title: 'Speech recognition unavailable', type: 'error' });
+    if (micError === 'unsupported' || micError === 'permission-denied') return;
+    
+    // Cancel any ongoing speech before mic starts
+    stopTTS();
+
+    if (isListening) {
+      stopListening();
+      // transcript effect will handle sending
+    } else {
+      setAssistantText('');
+      setPageState('listening');
+      startListening();
+    }
+  };
+
+  const handleUserStopSpeaking = async (text) => {
+    if (!text.trim()) {
+      setPageState('idle');
       return;
     }
     
-    if (synthRef.current) synthRef.current.cancel();
-
-    if (state === 'listening') {
-      recognitionRef.current.stop();
-      setState('idle');
-    } else {
-      setTranscript('');
-      setAssistantText('');
-      recognitionRef.current.start();
+    setPageState('processing');
+    
+    try {
+      const { askQuantumAPI } = await import('../services/quantumApi.js');
+      const result = await askQuantumAPI({
+        question: text,
+        pageContext: pageContext || {},
+        conversationHistory: [],
+        language: 'auto'
+      });
+      
+      setAssistantText(result.answer);
+      speak(result.answer); // shared hook → sets isSpeaking → pageState 'speaking'
+    } catch (err) {
+      console.error(err);
+      let errorMsg = "Sorry, I encountered an error.";
+      if (err.code === 'OLLAMA_OFFLINE') errorMsg = "Ollama is not running. Please start the local server.";
+      if (err.code === 'BACKEND_OFFLINE') errorMsg = "My backend server is offline.";
+      setAssistantText(errorMsg);
+      speak(errorMsg);
     }
   };
 
-  const handleUserStopSpeaking = (text) => {
-    if (recognitionRef.current) recognitionRef.current.stop();
-    setState('processing');
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const mockResponse = `I heard you say: "${text}". As an AI assistant, I can help you understand this page by summarizing its content or answering specific questions.`;
-      setAssistantText(mockResponse);
-      setState('speaking');
-      
-      const utterance = new SpeechSynthesisUtterance(mockResponse);
-      utterance.onend = () => setState('idle');
-      if (synthRef.current) synthRef.current.speak(utterance);
-    }, 1500);
+  const stopSpeaking = () => {
+    stopTTS();
+    setPageState('idle');
   };
 
-  const stopSpeaking = () => {
-    if (synthRef.current) synthRef.current.cancel();
-    setState('idle');
-  };
+  const state = pageState; // alias so JSX below stays clean
 
   return (
     <PageTransition style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -124,7 +129,19 @@ export default function VoicePage() {
         }
       />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', paddingBottom: '64px' }}>
+        
+        {isDev && (
+          <div style={{ background: 'rgba(203, 162, 58, 0.1)', border: '1px solid var(--quantum-gold)', color: 'var(--quantum-gold)', padding: '8px 16px', borderRadius: '8px', position: 'absolute', top: 0, fontSize: '0.85rem' }}>
+            <strong>DEV PREVIEW:</strong> Quantum doesn't have real page context. It will answer from general knowledge.
+          </div>
+        )}
+
+        {extractionStatus === 'protected' && (
+          <div style={{ background: 'rgba(255, 59, 48, 0.1)', border: '1px solid var(--quantum-error)', color: 'var(--quantum-error)', padding: '8px 16px', borderRadius: '8px', position: 'absolute', top: 0, fontSize: '0.85rem' }}>
+            <strong>Protected Page:</strong> Chrome blocks extensions here. I will answer from general knowledge.
+          </div>
+        )}
         
         {/* Animated Mic Ring Area */}
         <div style={{ position: 'relative', width: '200px', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -149,13 +166,15 @@ export default function VoicePage() {
 
           <button
             onClick={state === 'speaking' ? stopSpeaking : toggleListening}
+            disabled={state === 'error' || state === 'processing'}
             style={{
               width: '120px', height: '120px', borderRadius: '50%',
               background: state === 'listening' ? 'var(--quantum-gold)' : 'var(--quantum-glass)',
               border: `2px solid ${state === 'listening' ? 'var(--quantum-gold)' : 'var(--quantum-border)'}`,
-              color: state === 'listening' ? 'var(--quantum-black-deep)' : 'var(--quantum-gold)',
+              color: state === 'listening' ? 'var(--quantum-black-deep)' : (state === 'error' ? 'var(--quantum-text-muted)' : 'var(--quantum-gold)'),
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', zIndex: 10,
+              cursor: (state === 'error' || state === 'processing') ? 'not-allowed' : 'pointer', 
+              zIndex: 10,
               boxShadow: state === 'listening' ? '0 0 40px rgba(203, 162, 58, 0.4)' : 'none',
               transition: 'all 0.3s'
             }}
@@ -164,6 +183,8 @@ export default function VoicePage() {
               <Square size={48} fill="currentColor" />
             ) : state === 'listening' ? (
               <Mic size={48} />
+            ) : state === 'error' ? (
+              <AlertCircle size={48} />
             ) : (
               <MicOff size={48} />
             )}
@@ -177,6 +198,7 @@ export default function VoicePage() {
             {state === 'listening' && 'Listening...'}
             {state === 'processing' && 'Thinking...'}
             {state === 'speaking' && 'Quantum is speaking'}
+            {state === 'error' && 'Mic Unavailable'}
           </span>
         </div>
 

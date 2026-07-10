@@ -1,20 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Focus, Type, ArrowLeft, Volume2, Moon, Sun, Settings2, LayoutTemplate } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
-
-const MOCK_ARTICLE = `React Router v6 is a major update that brings many new features and simplifications to routing in React applications.
-
-One of the biggest changes is the replacement of the Switch component with the Routes component. This isn't just a simple rename; Routes comes with relative routing and linking, automatic route ranking, and nested routes.
-
-Nested routes are perhaps the most powerful feature. They allow you to define persistent layouts that wrap around child routes. When a user navigates from one child route to another, the layout component doesn't unmount or re-render unnecessarily, preserving its state (like a scroll position in a sidebar) and improving performance.
-
-Furthermore, React Router v6 introduces new data fetching APIs. By defining loaders directly on your routes, React Router can begin fetching data in parallel as soon as the user clicks a link, preventing waterfall requests and significantly speeding up page load times.`;
+import { usePageContext } from '../context/PageContext';
 
 export default function FocusPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { pageContext, title, domain, readingTime, isDev, extractionStatus } = usePageContext();
   
   const [theme, setTheme] = useState('dark'); // dark, warm
   const [fontSize, setFontSize] = useState(1.2);
@@ -26,8 +20,14 @@ export default function FocusPage() {
   const containerRef = useRef(null);
   const [progress, setProgress] = useState(0);
 
+  const activeContent = pageContext.content || '';
+
+  const articleChunks = useMemo(() => {
+    if (!activeContent || activeContent.trim().length === 0) return [];
+    return activeContent.split(/\n\s*\n/).filter(p => p.trim());
+  }, [activeContent]);
+
   useEffect(() => {
-    // Load prefs
     const prefs = localStorage.getItem('quantum-focus-prefs');
     if (prefs) {
       const p = JSON.parse(prefs);
@@ -36,25 +36,33 @@ export default function FocusPage() {
       setLineHeight(p.lineHeight || 1.8);
       setWidth(p.width || 800);
     }
+    return () => {
+      if (synthRef.current) synthRef.current.cancel();
+    };
   }, []);
 
   useEffect(() => {
-    // Save prefs
     localStorage.setItem('quantum-focus-prefs', JSON.stringify({ theme, fontSize, lineHeight, width }));
   }, [theme, fontSize, lineHeight, width]);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    const p = (scrollTop / (scrollHeight - clientHeight)) * 100;
-    setProgress(p || 0);
+    if (scrollHeight > clientHeight) {
+      const p = (scrollTop / (scrollHeight - clientHeight)) * 100;
+      setProgress(p || 0);
+    } else {
+      setProgress(100);
+    }
   };
 
   const readAloud = () => {
-    if (!synthRef.current) return;
+    if (!synthRef.current || !activeContent) return;
     synthRef.current.cancel();
-    const utterance = new SpeechSynthesisUtterance(MOCK_ARTICLE);
+    
+    // Quick simple TTS for the whole thing (use ReaderPage for granular control)
+    const utterance = new SpeechSynthesisUtterance(activeContent.slice(0, 5000) + (activeContent.length > 5000 ? "... content truncated for quick audio." : ""));
     synthRef.current.speak(utterance);
-    addToast({ title: 'Playing audio...', type: 'info' });
+    addToast({ title: 'Playing audio (quick read)...', type: 'info' });
   };
 
   const bgColor = theme === 'dark' ? '#080806' : '#f5f0e7';
@@ -81,13 +89,15 @@ export default function FocusPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="pp-ui-text" style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>React Router v6 Overview</h1>
-            <span style={{ fontSize: '0.8rem', color: mutedColor }}>medium.com • 3 min read</span>
+            <h1 className="pp-ui-text" style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>{title || 'Unknown Page'}</h1>
+            <span style={{ fontSize: '0.8rem', color: mutedColor }}>
+              {domain || 'local'} • {readingTime || '~'} min read
+            </span>
           </div>
         </div>
         
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={readAloud} style={{ ...iconBtn, color: textColor }} title="Read Aloud">
+          <button onClick={readAloud} style={{ ...iconBtn, color: textColor }} title="Quick Read Aloud">
             <Volume2 size={20} />
           </button>
           <button onClick={() => setShowControls(!showControls)} style={{ ...iconBtn, color: textColor, background: showControls ? (theme === 'dark' ? '#333' : '#ddd') : 'transparent' }} title="Appearance">
@@ -128,17 +138,17 @@ export default function FocusPage() {
           
           <div>
             <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: mutedColor, fontWeight: 600, display: 'block', marginBottom: '8px' }}>Font Size</span>
-            <input type="range" min="0.9" max="1.8" step="0.1" value={fontSize} onChange={e => setFontSize(parseFloat(e.target.value))} style={{ width: '100%' }} />
+            <input type="range" min="0.9" max="1.8" step="0.1" value={fontSize} onChange={e => setFontSize(parseFloat(e.target.value))} style={{ width: '100%', accentColor: 'var(--quantum-gold)' }} />
           </div>
           
           <div>
             <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: mutedColor, fontWeight: 600, display: 'block', marginBottom: '8px' }}>Line Height</span>
-            <input type="range" min="1.4" max="2.2" step="0.1" value={lineHeight} onChange={e => setLineHeight(parseFloat(e.target.value))} style={{ width: '100%' }} />
+            <input type="range" min="1.4" max="2.2" step="0.1" value={lineHeight} onChange={e => setLineHeight(parseFloat(e.target.value))} style={{ width: '100%', accentColor: 'var(--quantum-gold)' }} />
           </div>
 
           <div>
             <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: mutedColor, fontWeight: 600, display: 'block', marginBottom: '8px' }}>Reading Width</span>
-            <input type="range" min="500" max="1000" step="50" value={width} onChange={e => setWidth(parseInt(e.target.value))} style={{ width: '100%' }} />
+            <input type="range" min="500" max="1000" step="50" value={width} onChange={e => setWidth(parseInt(e.target.value))} style={{ width: '100%', accentColor: 'var(--quantum-gold)' }} />
           </div>
         </div>
       )}
@@ -157,9 +167,33 @@ export default function FocusPage() {
           fontSize: `${fontSize}rem`, lineHeight: lineHeight,
           transition: 'all 0.3s ease'
         }}>
-          {MOCK_ARTICLE.split('\n\n').map((para, i) => (
-            <p key={i} style={{ marginBottom: '1.5em' }}>{para}</p>
-          ))}
+          {isDev && (
+            <div style={{ background: 'rgba(203, 162, 58, 0.1)', border: `1px solid ${theme === 'dark' ? 'var(--quantum-gold)' : '#cba23a'}`, color: theme === 'dark' ? 'var(--quantum-gold)' : '#cba23a', padding: '12px', borderRadius: '8px', marginBottom: '40px', fontSize: '0.85rem' }}>
+              <strong>DEV PREVIEW:</strong> Using dev data. Load this inside the extension for live content.
+            </div>
+          )}
+
+          {extractionStatus === 'protected' && (
+            <div style={{ background: 'rgba(255, 59, 48, 0.1)', border: '1px solid #ff3b30', color: '#ff3b30', padding: '12px', borderRadius: '8px', marginBottom: '40px', fontSize: '0.85rem' }}>
+              <strong>Protected Page:</strong> Chrome blocks extensions from reading this internal page.
+            </div>
+          )}
+
+          {articleChunks.length === 0 && extractionStatus !== 'protected' ? (
+            <p style={{ textAlign: 'center', opacity: 0.5, marginTop: '20vh' }}>No readable content found on this page.</p>
+          ) : (
+            articleChunks.map((para, i) => {
+              // Very basic heuristic to detect headings if no markdown is provided
+              const isShort = para.length < 80;
+              const hasNoPunctuation = !/[.?!]$/.test(para.trim());
+              const isHeading = isShort && hasNoPunctuation;
+              
+              if (isHeading) {
+                return <h2 key={i} style={{ marginTop: '2em', marginBottom: '1em', fontSize: '1.4em', fontWeight: 600 }}>{para}</h2>;
+              }
+              return <p key={i} style={{ marginBottom: '1.5em' }}>{para}</p>;
+            })
+          )}
         </div>
       </div>
     </motion.div>
