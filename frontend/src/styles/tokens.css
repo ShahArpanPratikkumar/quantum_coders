@@ -1,0 +1,73 @@
+/* ─── LUMEN — Aurora Glass Design Tokens ─────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Core backgrounds ── */
+  --bg-deep:      #0B1120;
+  --bg-layer:     #101A2E;
+
+  /* ── Glass fills ── */
+  --glass-fill:   rgba(255, 255, 255, 0.06);
+  --glass-fill-2: rgba(255, 255, 255, 0.10);
+  --glass-fill-3: rgba(255, 255, 255, 0.14);
+
+  /* ── Glass borders ── */
+  --glass-border:       rgba(255, 255, 255, 0.14);
+  --glass-border-hover: rgba(255, 255, 255, 0.28);
+
+  /* ── Brand colors ── */
+  --cyan:   #22D3EE;
+  --violet: #A78BFA;
+  --coral:  #FB7185;
+
+  /* ── Typography ── */
+  --ink:     #EAF0FF;
+  --ink-dim: #93A0C2;
+
+  /* ── Semantic ── */
+  --success: #34D399;
+  --error:   #F87171;
+  --warning: #FBBF24;
+
+  /* ── Radii ── */
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
+  /* ── Shadows ── */
+  --shadow-sm:  0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-md:  0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-lg:  0 20px 60px rgba(0, 0, 0, 0.55);
+  --shadow-glow-cyan:   0 0 24px rgba(34, 211, 238, 0.25);
+  --shadow-glow-violet: 0 0 24px rgba(167, 139, 250, 0.25);
+  --shadow-glow-coral:  0 0 24px rgba(251, 113, 133, 0.25);
+
+  /* ── Transitions ── */
+  --transition-fast:   0.15s ease-out;
+  --transition-normal: 0.25s ease-out;
+  --transition-slow:   0.35s ease-out;
+  --transition-exit:   0.20s ease-in;
+
+  /* ── Font families ── */
+  --font-display: 'Sora', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Z-index scale ── */
+  --z-base:    1;
+  --z-overlay: 100;
+  --z-panel:   200;
+  --z-fab:     300;
+  --z-tooltip: 400;
+}
+
+/* ── Reduced motion: disable non-essential animations globally ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

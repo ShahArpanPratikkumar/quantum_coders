@@ -1,0 +1,90 @@
+/* ─── Quantum AI — Design System Variables ─────────────────────────── */
+/* Luxury Editorial: Black · Gold · Ivory                                  */
+
+@import url('https://fonts.googleapis.com/css2?family=Allura&family=Bodoni+Moda:opsz,ital,wght@6..96,0,400;6..96,0,500;6..96,0,600;6..96,0,700;6..96,1,400;6..96,1,500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  /* ── Core backgrounds ── */
+  --pp-black:       #080806;
+  --pp-deep-black:  #0d0c09;
+  --pp-charcoal:    #15130f;
+  --pp-surface:     #191711;
+  --pp-surface-2:   #1f1d17;
+
+  /* ── Gold palette ── */
+  --pp-gold:        #cba23a;
+  --pp-gold-light:  #e0bb57;
+  --pp-gold-dark:   #8f6a18;
+  --pp-gold-soft:   rgba(203, 162, 58, 0.18);
+  --pp-gold-softer: rgba(203, 162, 58, 0.08);
+
+  /* ── Ivory & text ── */
+  --pp-ivory:       #f5f0e7;
+  --pp-cream:       #ddd4c4;
+  --pp-muted:       #948b7b;
+  --pp-muted-dark:  #625b50;
+
+  /* ── Semantic ── */
+  --pp-success:     #8ea96c;
+  --pp-warning:     #d2a34d;
+  --pp-error:       #c46c61;
+
+  /* ── Glass & borders ── */
+  --pp-glass:         rgba(25, 23, 17, 0.82);
+  --pp-glass-light:   rgba(255, 255, 255, 0.035);
+  --pp-border:        rgba(203, 162, 58, 0.25);
+  --pp-border-light:  rgba(245, 240, 231, 0.08);
+  --pp-border-hover:  rgba(203, 162, 58, 0.55);
+
+  /* ── Gradients ── */
+  --pp-gold-gradient: linear-gradient(135deg, #8f6a18 0%, #cba23a 35%, #e0bb57 65%, #9b741e 100%);
+  --pp-dark-gradient: linear-gradient(145deg, #080806 0%, #12100c 50%, #080806 100%);
+  --pp-panel-gradient: linear-gradient(160deg, #13110d 0%, #0d0c09 100%);
+
+  /* ── Shadows ── */
+  --pp-soft-shadow:  0 24px 80px rgba(0, 0, 0, 0.65);
+  --pp-panel-shadow: 0 32px 100px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(203, 162, 58, 0.12);
+  --pp-gold-glow:    0 0 40px rgba(203, 162, 58, 0.15);
+  --pp-gold-glow-sm: 0 0 18px rgba(203, 162, 58, 0.2);
+  --pp-card-shadow:  0 8px 40px rgba(0, 0, 0, 0.5);
+
+  /* ── Fonts ── */
+  --font-logo:       'Allura', cursive;
+  --font-display:    'Bodoni Moda', serif;
+  --font-editorial:  'Cormorant Garamond', serif;
+  --font-interface:  'Inter', sans-serif;
+
+  /* ── Radii ── */
+  --radius-lg:  18px;
+  --radius-md:  12px;
+  --radius-sm:  8px;
+  --radius-xs:  5px;
+
+  /* ── Spacing scale ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* ── Z-index scale ── */
+  --z-base:    1;
+  --z-nav:     100;
+  --z-panel:   200;
+  --z-fab:     300;
+  --z-drawer:  400;
+  --z-cursor:  9000;
+
+  /* ── Transitions ── */
+  --ease-luxury:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out:      cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in:       cubic-bezier(0.4, 0.0, 1, 1);
+  --t-fast:   180ms;
+  --t-normal: 280ms;
+  --t-slow:   480ms;
+}
