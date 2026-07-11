@@ -1,14 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, Square } from 'lucide-react';
+import { Send, Mic, MicOff, Square, Plus, X, Image as ImageIcon, Code, File as FileIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuantum } from '../../context/QuantumContext';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import './ChatInput.css';
 
 export default function ChatInput() {
   const [text, setText] = useState('');
-  const [isListening, setIsListening] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
   const { status, setStatus, handleUserQuery } = useQuantum();
+  const {
+    isListening, transcript, consumeTranscript,
+    startListening, stopListening, error: micError
+  } = useSpeechRecognition();
 
   const busy = ['thinking', 'extracting'].includes(status);
   const speaking = status === 'speaking';
@@ -21,11 +27,73 @@ export default function ChatInput() {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   }, [text]);
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setStatus('extracting'); // Show UI as busy while parsing
+
+    try {
+      const isText = file.type.startsWith('text/') || file.name.match(/\.(js|jsx|ts|tsx|json|html|css|py|cpp|java|md|csv)$/i);
+      const isPdf = file.name.toLowerCase().endsWith('.pdf');
+
+      let fileContent = '';
+      let isReadable = false;
+
+      if (isPdf) {
+        // Dynamically import the PDF parser only when needed
+        const { extractTextFromPDF } = await import('../../utils/pdfParser.js');
+        fileContent = await extractTextFromPDF(file);
+        isReadable = true;
+      } else if (isText) {
+        fileContent = await file.text();
+        isReadable = true;
+      } else {
+        // Fallback for images or unsupported binary files
+        const reader = new FileReader();
+        fileContent = await new Promise((resolve) => {
+          reader.onload = (event) => resolve(event.target.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      setAttachedFile({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        content: fileContent,
+        isText: isReadable // Indicates to the backend if the content is raw text
+      });
+    } catch (err) {
+      console.error('File parsing error:', err);
+      alert('Failed to parse file: ' + err.message);
+    } finally {
+      setStatus('ready');
+    }
+  };
+
+  const clearFile = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSend = async () => {
     const msg = text.trim();
-    if (!msg || busy) return;
+    if ((!msg && !attachedFile) || busy) return;
+    
     setText('');
-    await handleUserQuery(msg);
+    
+    let finalQuery = msg;
+    if (attachedFile) {
+      if (attachedFile.isText) {
+        finalQuery = `[Attached File: ${attachedFile.name}]\n${attachedFile.content}\n\n${msg}`;
+      } else {
+        finalQuery = `[Attached File: ${attachedFile.name}]\n(Note: This is a binary/image file. Content is not fully text-readable by the current model)\n\n${msg}`;
+      }
+      clearFile();
+    }
+    
+    await handleUserQuery(finalQuery);
   };
 
   const handleKey = (e) => {
@@ -35,19 +103,28 @@ export default function ChatInput() {
     }
   };
 
+  // When transcript arrives from hook
+  useEffect(() => {
+    if (transcript && !isListening) {
+      const captured = consumeTranscript();
+      if (captured) {
+        setText(captured);
+        requestAnimationFrame(() => {
+          handleUserQuery(captured);
+          setText('');
+        });
+      }
+      setStatus('ready');
+    }
+  }, [transcript, isListening, consumeTranscript, handleUserQuery, setStatus]);
+
   const toggleMic = () => {
     if (isListening) {
-      setIsListening(false);
-      setStatus('ready');
+      stopListening();
     } else {
-      setIsListening(true);
+      window.speechSynthesis?.cancel(); // stop current speech before listening
       setStatus('listening');
-      // Simulate: auto-stop after 4s
-      setTimeout(() => {
-        setIsListening(false);
-        setStatus('ready');
-        setText('Summarize this article for me.');
-      }, 4000);
+      startListening();
     }
   };
 
@@ -106,19 +183,46 @@ export default function ChatInput() {
         )}
       </AnimatePresence>
 
+      {/* File Chip UI */}
+      <AnimatePresence>
+        {attachedFile && (
+          <motion.div
+            className="pp-ci__file-chip"
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+          >
+            <div className="pp-ci__file-icon">
+              {attachedFile.type.startsWith('image/') ? <ImageIcon size={14} /> : 
+               attachedFile.isText ? <Code size={14} /> : 
+               <FileIcon size={14} />}
+            </div>
+            <span className="pp-ci__file-name" title={attachedFile.name}>{attachedFile.name}</span>
+            <button className="pp-ci__file-remove" onClick={clearFile} aria-label="Remove file">
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main input row */}
       <div className="pp-ci__row">
-        {/* Mic */}
-        <button
-          className={`pp-ci__mic ${isListening ? 'pp-ci__mic--active' : ''}`}
-          onClick={toggleMic}
-          aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-          aria-pressed={isListening}
+        {/* Attachment Button */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          style={{ display: 'none' }} 
+          onChange={handleFileChange}
+          accept=".pdf,.doc,.docx,.txt,image/*,.js,.ts,.jsx,.tsx,.html,.css,.json,.py,.cpp,.java,.md,.csv"
+        />
+        <button 
+          className="pp-ci__attach"
+          onClick={() => fileInputRef.current?.click()}
           disabled={busy || speaking}
-          title="Voice input (Alt+M)"
+          aria-label="Attach file"
+          title="Attach file"
         >
-          {isListening ? <MicOff size={16} strokeWidth={1.5} /> : <Mic size={16} strokeWidth={1.5} />}
-          {isListening && <span className="pp-ci__mic-ring" aria-hidden="true" />}
+          <Plus size={20} strokeWidth={2} />
         </button>
 
         {/* Textarea */}
@@ -135,16 +239,31 @@ export default function ChatInput() {
           aria-multiline="true"
         />
 
-        {/* Send */}
-        <button
-          className="pp-ci__send"
-          onClick={handleSend}
-          disabled={!text.trim() || busy}
-          aria-label="Send message"
-          title="Send (Enter)"
-        >
-          <Send size={15} strokeWidth={1.8} />
-        </button>
+        <div className="pp-ci__actions">
+          {/* Mic */}
+          <button
+            className={`pp-ci__mic ${isListening ? 'pp-ci__mic--active' : ''}`}
+            onClick={toggleMic}
+            aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+            aria-pressed={isListening}
+            disabled={busy || speaking}
+            title="Voice input (Alt+M)"
+          >
+            {isListening ? <MicOff size={16} strokeWidth={1.5} /> : <Mic size={16} strokeWidth={1.5} />}
+            {isListening && <span className="pp-ci__mic-ring" aria-hidden="true" />}
+          </button>
+
+          {/* Send */}
+          <button
+            className="pp-ci__send"
+            onClick={handleSend}
+            disabled={(!text.trim() && !attachedFile) || busy}
+            aria-label="Send message"
+            title="Send (Enter)"
+          >
+            <Send size={15} strokeWidth={1.8} />
+          </button>
+        </div>
       </div>
 
       <p className="pp-ci__hint pp-label" style={{ color: 'var(--pp-muted-dark)', textAlign: 'center', paddingBottom: 4 }}>

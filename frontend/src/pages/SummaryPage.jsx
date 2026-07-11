@@ -17,7 +17,7 @@ const SUMMARY_MODES = [
 ];
 
 export default function SummaryPage() {
-  const { pageContext, isDev, extractionStatus } = usePageContext();
+  const { pageContext, isDev, extractionStatus, extractionError, retryExtraction } = usePageContext();
   const { addToast } = useToast();
   const { speak, pause, resume, stop: stopSpeaking, replay, isSpeaking, isPaused } = useSpeechSynthesis();
   
@@ -106,6 +106,18 @@ export default function SummaryPage() {
           </div>
         )}
 
+        {extractionStatus === 'error' && (
+          <div style={{ background: 'rgba(255, 59, 48, 0.1)', border: '1px solid var(--quantum-error)', color: 'var(--quantum-error)', padding: '16px', borderRadius: '8px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <span style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>{extractionError || "Could not extract page content."}</span>
+            </div>
+            <button onClick={retryExtraction} className="q-btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem', alignSelf: 'flex-start' }}>
+              <RefreshCw size={14} style={{ marginRight: '6px' }} /> Retry Extraction
+            </button>
+          </div>
+        )}
+
         <h3 className="pp-ui-text" style={{ color: 'var(--quantum-ivory)', marginBottom: '16px' }}>
           Select Summary Mode
         </h3>
@@ -155,15 +167,22 @@ export default function SummaryPage() {
           variant="primary" 
           size="lg" 
           onClick={handleGenerate}
-          disabled={isGenerating || extractionStatus === 'protected'}
+          disabled={isGenerating || extractionStatus === 'protected' || extractionStatus === 'extracting'}
           style={{ width: '100%', marginBottom: '48px', display: 'flex', justifyContent: 'center' }}
         >
-          {isGenerating ? (
+          {extractionStatus === 'extracting' ? (
             <>
               <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
                 <RefreshCw size={18} />
               </motion.div>
-              Generating Summary...
+              Extracting page...
+            </>
+          ) : isGenerating ? (
+            <>
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                <RefreshCw size={18} />
+              </motion.div>
+              Generating summary...
             </>
           ) : (
             <>

@@ -4,126 +4,17 @@
  * In extension mode: extracts real content from the active tab.
  * In dev mode: shows a clearly labelled DEV PREVIEW state.
  */
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { isExtensionEnvironment, getActiveTabInfo, extractPageContent, getSelectedText } from '../services/chromeService';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { isExtensionEnvironment, getSelectedText } from '../services/chromeService';
+import { usePageExtraction } from '../hooks/usePageExtraction';
 
 const PageContext = createContext(null);
 
-const INITIAL_STATE = {
-  // Tab info
-  tabId: null,
-  tabUrl: null,
-  title: '',
-  url: '',
-  domain: '',
-  favicon: '',
-  isProtected: false,
-
-  // Extracted content
-  content: '',
-  excerpt: '',
-  author: '',
-  wordCount: 0,
-  readingTime: 0,
-  pageType: '',
-  headings: [],
-  codeBlocks: [],
-  selectedText: '',
-
-  // Status
-  extractionStatus: 'idle', // idle | extracting | success | error | protected | no-content
-  extractionError: null,
-  isDemo: false,
-  isDev: !isExtensionEnvironment
-};
-
 export function PageProvider({ children }) {
-  const [state, setState] = useState(INITIAL_STATE);
   const [aiState, setAiState] = useState('ready');
   const [aiStateMessage, setAiStateMessage] = useState('');
-  const currentTabRef = useRef(null);
-
-  const extractContent = useCallback(async (tabId) => {
-    if (!tabId) return;
-    
-    setState(prev => ({ ...prev, extractionStatus: 'extracting' }));
-
-    const content = await extractPageContent(tabId);
-
-    if (!content) {
-      setState(prev => ({
-        ...prev,
-        extractionStatus: 'error',
-        extractionError: 'Could not extract page content. The page may be protected or not yet loaded.',
-        content: ''
-      }));
-      return;
-    }
-
-    if (!content.content || content.content.trim().length < 20) {
-      setState(prev => ({
-        ...prev,
-        extractionStatus: 'no-content',
-        extractionError: 'This page has no readable text content.',
-        content: ''
-      }));
-      return;
-    }
-
-    setState(prev => ({
-      ...prev,
-      content: content.content || '',
-      excerpt: content.excerpt || '',
-      author: content.author || '',
-      wordCount: content.wordCount || 0,
-      readingTime: content.readingTime || 0,
-      pageType: content.pageType || 'Page',
-      headings: content.headings || [],
-      codeBlocks: content.codeBlocks || [],
-      extractionStatus: 'success',
-      extractionError: null
-    }));
-  }, []);
-
-  const loadTab = useCallback(async () => {
-    const tabInfo = await getActiveTabInfo();
-
-    // Dev mode — no real tab available
-    if (!tabInfo) {
-      setState(prev => ({
-        ...INITIAL_STATE,
-        isDev: true,
-        isDemo: true,
-        extractionStatus: 'idle',
-        aiStateMessage: '⚠️ Development Preview — not live page data'
-      }));
-      return;
-    }
-
-    // Tab changed — reset content
-    const isNewTab = currentTabRef.current?.id !== tabInfo.id || currentTabRef.current?.url !== tabInfo.url;
-    if (isNewTab) {
-      currentTabRef.current = { id: tabInfo.id, url: tabInfo.url };
-      
-      setState(prev => ({
-        ...INITIAL_STATE,
-        tabId: tabInfo.id,
-        tabUrl: tabInfo.url,
-        title: tabInfo.title,
-        url: tabInfo.url,
-        domain: tabInfo.domain,
-        favicon: tabInfo.favicon,
-        isProtected: tabInfo.isProtected,
-        isDev: false,
-        isDemo: false,
-        extractionStatus: tabInfo.isProtected ? 'protected' : 'extracting'
-      }));
-
-      if (!tabInfo.isProtected) {
-        await extractContent(tabInfo.id);
-      }
-    }
-  }, [extractContent]);
+  
+  const { extractionState, setExtractionState, loadTab, retryExtraction } = usePageExtraction();
 
   // Initial load
   useEffect(() => {
@@ -163,32 +54,34 @@ export function PageProvider({ children }) {
   }, [loadTab]);
 
   const updateSelectedText = useCallback(async () => {
-    if (!state.tabId) return;
-    const text = await getSelectedText(state.tabId);
+    if (!extractionState.tabId) return;
+    const text = await getSelectedText(extractionState.tabId);
     if (text) {
-      setState(prev => ({ ...prev, selectedText: text }));
+      setExtractionState(prev => ({ ...prev, selectedText: text }));
     }
-  }, [state.tabId]);
+  }, [extractionState.tabId, setExtractionState]);
 
   const value = {
-    ...state,
+    ...extractionState,
+    isDev: !isExtensionEnvironment,
     aiState,
     setAiState,
     aiStateMessage,
     setAiStateMessage,
     refreshPageContext,
     updateSelectedText,
+    retryExtraction,
     // Convenience: the full context object to send to backend
     pageContext: {
-      title: state.title,
-      url: state.url,
-      domain: state.domain,
-      content: state.content,
-      excerpt: state.excerpt,
-      wordCount: state.wordCount,
-      readingTime: state.readingTime,
-      pageType: state.pageType,
-      headings: state.headings
+      title: extractionState.title,
+      url: extractionState.url,
+      domain: extractionState.domain,
+      content: extractionState.content,
+      excerpt: extractionState.excerpt,
+      wordCount: extractionState.wordCount,
+      readingTime: extractionState.readingTime,
+      pageType: extractionState.pageType,
+      headings: extractionState.headings
     }
   };
 

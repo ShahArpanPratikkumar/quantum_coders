@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
-import { Copy, RotateCcw, Volume2, Square } from 'lucide-react';
+import { Copy, RotateCcw, Volume2, Square, Play, Pause } from 'lucide-react';
+import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
 import './MessageCard.css';
 
 function formatTime(date) {
@@ -9,6 +10,7 @@ function formatTime(date) {
 export default function MessageCard({ message }) {
   const { role, content, timestamp, hasPageRef } = message;
   const isUser = role === 'user';
+  const { speak, pause, resume, stop, isSpeaking, isPaused } = useSpeechSynthesis();
 
   const copyText = () => navigator.clipboard?.writeText(content).catch(() => {});
 
@@ -68,12 +70,24 @@ export default function MessageCard({ message }) {
                 <button className="pp-msg__action-btn" onClick={copyText} aria-label="Copy response" title="Copy">
                   <Copy size={12} strokeWidth={1.5} />
                 </button>
-                <button className="pp-msg__action-btn" aria-label="Replay response" title="Replay">
-                  <RotateCcw size={12} strokeWidth={1.5} />
-                </button>
-                <button className="pp-msg__action-btn" aria-label="Read aloud" title="Read aloud">
+                <button className="pp-msg__action-btn" onClick={() => speak(content)} aria-label="Read aloud" title="Read aloud" disabled={isSpeaking}>
                   <Volume2 size={12} strokeWidth={1.5} />
                 </button>
+                {isSpeaking && (
+                  <>
+                    <button className="pp-msg__action-btn" onClick={isPaused ? resume : pause} aria-label={isPaused ? "Resume" : "Pause"} title={isPaused ? "Resume" : "Pause"}>
+                      {isPaused ? <Play size={12} strokeWidth={1.5} /> : <Pause size={12} strokeWidth={1.5} />}
+                    </button>
+                    <button className="pp-msg__action-btn" onClick={stop} aria-label="Stop reading" title="Stop">
+                      <Square size={12} fill="currentColor" />
+                    </button>
+                  </>
+                )}
+                {!isSpeaking && (
+                  <button className="pp-msg__action-btn" onClick={() => speak(content)} aria-label="Replay response" title="Replay">
+                    <RotateCcw size={12} strokeWidth={1.5} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

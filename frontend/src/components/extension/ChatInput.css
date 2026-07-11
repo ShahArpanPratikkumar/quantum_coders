@@ -150,3 +150,68 @@
   letter-spacing: 0.06em;
   font-size: 0.63rem;
 }
+
+/* File Chip UI */
+.pp-ci__file-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(203, 162, 58, 0.1);
+  border: 1px solid rgba(203, 162, 58, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.pp-ci__file-icon {
+  color: var(--pp-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pp-ci__file-name {
+  color: var(--pp-ivory);
+  font-family: var(--font-interface);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.pp-ci__file-remove {
+  color: var(--pp-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--t-fast);
+  margin-left: auto;
+}
+.pp-ci__file-remove:hover { color: var(--pp-error, #ff4d4f); }
+
+/* Attachment button */
+.pp-ci__attach {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pp-muted);
+  flex-shrink: 0;
+  transition: all var(--t-fast);
+}
+.pp-ci__attach:hover:not(:disabled) {
+  color: var(--pp-gold);
+  background: rgba(203, 162, 58, 0.1);
+}
+.pp-ci__attach:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Actions wrapper */
+.pp-ci__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
