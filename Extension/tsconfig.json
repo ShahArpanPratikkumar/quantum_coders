@@ -15,12 +15,18 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./frontend/*"
+        "frontend/*"
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "frontend/**/*",
+    "backend/**/*",
+    "vite.config.ts"
+  ]
 }
