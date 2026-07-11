@@ -1,4 +1,4 @@
-import { Settings, Minimize2, X } from 'lucide-react';
+import { Settings, Minimize2, X, ExternalLink } from 'lucide-react';
 import { useQuantum } from '../../context/QuantumContext';
 import StatusDot from '../ui/StatusDot';
 import './PanelHeader.css';
@@ -16,6 +16,17 @@ export default function PanelHeader() {
 
       {/* Actions */}
       <div className="pp-ph__actions">
+        <a
+          href="https://quantum-ai1.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pp-ph__btn"
+          style={{ width: 'auto', padding: '0 8px', fontSize: '11px', fontWeight: '600', textDecoration: 'none', color: 'var(--text-secondary)' }}
+          title="Link to Extension"
+        >
+          <ExternalLink size={13} strokeWidth={2} style={{ marginRight: '4px' }} />
+          Extension
+        </a>
         <button
           className="pp-ph__btn"
           onClick={() => setIsSettingsOpen(s => !s)}

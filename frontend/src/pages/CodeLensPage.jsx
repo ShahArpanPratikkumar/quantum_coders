@@ -19,17 +19,11 @@ export default function CodeLensPage() {
     setResult(null);
     
     try {
-      const { explainTextAPI } = await import('../services/quantumApi.js');
-      let modeDesc = "";
-      if (actionKey === 'explain') modeDesc = "Explain this code block in detail.";
-      if (actionKey === 'lineByLine') modeDesc = "Explain this code block line by line.";
-      if (actionKey === 'bugs') modeDesc = "Find bugs and vulnerabilities in this code block.";
-      if (actionKey === 'simplify') modeDesc = "Refactor and simplify this code block.";
-      
-      const res = await explainTextAPI({ text: modeDesc + "\n\n" + userCode, context: 'Code snippet analysis' });
-      setResult(res.explanation);
+      const { analyseCodeAPI } = await import('../services/quantumApi.js');
+      const res = await analyseCodeAPI({ code: userCode, action: actionKey });
+      setResult(res.analysis);
     } catch (err) {
-      setResult("Error: Could not connect to backend.");
+      setResult(`Error: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
