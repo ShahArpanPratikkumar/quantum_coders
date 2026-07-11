@@ -50,6 +50,15 @@ app.use('/api', limiter);
 // Routes
 app.use('/api', quantumRoutes);
 
+// Root test routes for browser testing
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'Quantum AI Backend is running perfectly! 🚀' });
+});
+
+app.get('/api', (req, res) => {
+  res.json({ success: true, message: 'Quantum AI API is active. Send POST requests to /api/quantum/ask to interact with the AI.' });
+});
+
 // 404
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found.` });
