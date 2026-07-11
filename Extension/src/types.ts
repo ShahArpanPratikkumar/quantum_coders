@@ -9,6 +9,10 @@ export interface ExtractedPageData {
   content: string;
   byline: string;
   length: number;
+  originalTitle?: string;
+  originalContent?: string;
+  translatedTitle?: string;
+  translatedContent?: string;
 }
 
 export type ChatMessageSender = 'user' | 'assistant' | 'system';

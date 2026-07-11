@@ -428,3 +428,89 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 } else {
   window.addEventListener('DOMContentLoaded', injectQuantumTriggerButton);
 }
+
+// ==========================================
+// FEATURE 1: ADVANCED LIVE PAGE CONTEXT TRACKING
+// ==========================================
+(function() {
+  let lastUrl = window.location.href;
+  let lastScrollPercent = 0;
+
+  function safeSendMessage(message: any) {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        chrome.runtime.sendMessage(message, () => {
+          // Ignore runtime.lastError to prevent console errors if popup is closed
+          const err = chrome.runtime.lastError;
+        });
+      }
+    } catch (e) {
+      // Catch extension context invalidated errors gracefully
+    }
+  }
+
+  // Detect SPA URL changes by wrapping pushState/replaceState
+  const wrapHistory = (type: 'pushState' | 'replaceState') => {
+    const original = (window.history as any)[type];
+    if (typeof original === 'function') {
+      (window.history as any)[type] = function(...args: any[]) {
+        const result = original.apply(this, args);
+        setTimeout(checkUrlChange, 100);
+        return result;
+      };
+    }
+  };
+
+  wrapHistory('pushState');
+  wrapHistory('replaceState');
+
+  function checkUrlChange() {
+    const currentUrl = window.location.href;
+    if (currentUrl !== lastUrl) {
+      lastUrl = currentUrl;
+      safeSendMessage({
+        type: 'PAGE_CONTEXT_UPDATED',
+        payload: {
+          url: currentUrl,
+          reason: 'url_change',
+          title: document.title
+        }
+      });
+    }
+  }
+
+  // Listen to popstate and hashchange events
+  window.addEventListener('popstate', checkUrlChange);
+  window.addEventListener('hashchange', checkUrlChange);
+
+  // Monitor SPA URL changes periodically as an ultimate fallback
+  setInterval(checkUrlChange, 2000);
+
+  // Debounced scroll listener to trigger automatic context refreshes
+  let scrollTimeout: any = null;
+  window.addEventListener('scroll', () => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const h = document.documentElement;
+      const b = document.body;
+      const st = 'scrollTop';
+      const sh = 'scrollHeight';
+      const percent = Math.round((h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight) * 100);
+      
+      // Notify only on significant 15% scroll jumps
+      if (Math.abs(percent - lastScrollPercent) >= 15) {
+        lastScrollPercent = percent;
+        safeSendMessage({
+          type: 'PAGE_CONTEXT_UPDATED',
+          payload: {
+            url: window.location.href,
+            reason: 'scroll',
+            scrollPercent: percent,
+            title: document.title
+          }
+        });
+      }
+    }, 1500);
+  }, { passive: true });
+})();
+

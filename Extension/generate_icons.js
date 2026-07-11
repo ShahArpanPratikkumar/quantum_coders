@@ -21,7 +21,7 @@ const iconBase64 =
   'XvB5/A3uBveA9zV692Xst9Gv6fGZ4X/f60N/puzlG5mNAnX7VvH/R+Gv8VvAh+CfePyWe9XjdWfC' +
   'gR8X/h3v96C/O8fO9f70Z1uyZMnyP8v/PnkBv/6X5BbyE+UvH60eon9j6gAAAABJRU5ErkJggg==';
 
-const assetsDir = path.join(process.cwd(), 'frontend', 'public', 'assets');
+const assetsDir = path.join(process.cwd(), 'public', 'assets');
 
 // Create directory if it doesn't exist
 if (!fs.existsSync(assetsDir)) {

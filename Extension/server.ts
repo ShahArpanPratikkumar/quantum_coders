@@ -3,7 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
-import { aiRouter } from "./controllers/ai.controller";
+import { aiRouter } from "./server/controllers/ai.controller";
 
 dotenv.config();
 

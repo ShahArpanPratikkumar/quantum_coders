@@ -26,7 +26,10 @@ export class QuestionFeature {
       "Answer the user's question strictly utilizing the provided document content. " +
       "If the answer is not mentioned or cannot be inferred from the document, state: " +
       "'Based on the current document, I cannot find information regarding this question.' " +
-      "Keep answers concise, direct, and factual. Always stay context-safe.";
+      "Provide highly detailed, comprehensive, and thoroughly structured professional responses. " +
+      "Use elegant markdown headers, bullet points, numbered lists, code snippets, or markdown tables " +
+      "to outline your answers. Break down complex facts into thorough sub-bullets, and deliver an analytical, " +
+      "high-fidelity study digest. Always stay context-safe and preserve strict document facts.";
 
     // Convert sliding history into a readable prompt context
     let historyContext = "";
